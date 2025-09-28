@@ -12,6 +12,8 @@ using System.Net.Sockets;
 using System.Threading;
 using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
+using TMPro;
 
 public class TCP : MonoBehaviour
 {
@@ -23,12 +25,24 @@ public class TCP : MonoBehaviour
     NetworkStream stream = null;
     Thread thread;
 
+    // anchor position
+    string targetName = "AnchorPrefab(Clone)";
+    List<GameObject> allAnchors = new List<GameObject>();
+
+    Transform[] allObjects;
+
     // Define your own message
     [Serializable]
     public class Message
     {
-        public string some_string;
-        public int some_int;
+        public List<Anchor> listOfAnchors = new List<Anchor>();
+    }
+    
+    [Serializable]
+    public class Anchor
+    {
+        public int id;
+        public Vector3 position;
     }
 
     private float timer = 0;
@@ -46,22 +60,60 @@ public class TCP : MonoBehaviour
     {
         // Debug.Log("Hallo")
         // Send message to client every 2 second
-        if(Time.time > timer)
+        if (Time.time > timer)
         {
-            Message msg = new Message();
-            msg.some_string = "From Server";
-            msg.some_int = 1;
-            SendMessageToClient(msg);
+
+            Message message = new Message();
+            
+            
+            // TODO: set to values from RealSense
+            // message.id = 1;
+            // message.position = [0,0,0];
+            // Vector3 position = new Vector3(1f, 2f, 3f);
+            // message.position = position;
+
+            allObjects = FindObjectsOfType<Transform>();
+            var matchingObjects = allObjects
+                .Where(obj => obj.name == targetName)
+                .Select(obj => obj.gameObject)
+                .ToList();
+
+            Debug.Log("Found Anchors: " + matchingObjects.Count);
+
+            foreach (var obj in matchingObjects)
+            {
+                var fullIdText = obj.GetComponentInChildren<TextMeshProUGUI>().text;
+                var currentAnchorId = int.Parse(fullIdText.Split(":")[1]);
+
+                var currentAnchorPosition = obj.transform.position;
+
+                Anchor currentAnchor = new Anchor
+                {
+                    id = currentAnchorId,
+                    position = currentAnchorPosition
+                };
+
+                Debug.Log("Anchor" + currentAnchor.id + " " + currentAnchor.position);
+
+                message.listOfAnchors.Add(currentAnchor);
+            }
+            SendMessageToClient(message);
             timer = Time.time + 2f;
         }
         // Process message que
         lock(Lock)
         {
-            foreach (Message msg in MessageQue)
+            foreach (Message message in MessageQue)
             {
                 // Unity only allow main thread to modify GameObjects.
                 // Spawn, Move, Rotate GameObjects here. 
-                Debug.Log("Received Str: " + msg.some_string + " Int: " + msg.some_int);
+                // int id = message.id;
+
+                // float x = message.position.x;
+                // float y = message.position.y;
+                // float z = message.position.z;
+
+                // Debug.Log("Received from client: ---------" + "ID:" + id + " | x: " + x + " | y: " + y +  " | z: " + z);
             }
             MessageQue.Clear();
         }
@@ -72,10 +124,10 @@ public class TCP : MonoBehaviour
         try
         {
             IPAddress localAddr = IPAddress.Parse(hostIP);
-            Debug.Log(localAddr);
+            // Debug.Log(localAddr);
             server = new TcpListener(localAddr, port);
             server.Start();
-            Debug.Log("sERVER STARTED");
+            Debug.Log("SERVER STARTED");
 
             byte[] buffer = new byte[1024];
             string data = null;
@@ -142,7 +194,7 @@ public class TCP : MonoBehaviour
         if(stream == null){
             return;
         }
-
+        Debug.Log(Encode(message));
         byte[] msg = Encoding.UTF8.GetBytes(Encode(message));
         stream.Write(msg, 0, msg.Length);
         Debug.Log("Sent: " + message);
@@ -151,13 +203,20 @@ public class TCP : MonoBehaviour
     // Encode message from struct to Json String
     public string Encode(Message message)
     {
+        // Debug.Log(message.listOfAnchors[0].);
         return JsonUtility.ToJson(message, true);
     }
 
     // Decode messaage from Json String to struct
     public Message Decode(string json_string)
     {
-        Message msg = JsonUtility.FromJson<Message>(json_string);
-        return msg;
+        try{
+            Message msg = JsonUtility.FromJson<Message>(json_string);
+            return msg;
+        }
+        catch (Exception e){
+            Debug.LogError("Failed to decode message: " + e.Message);
+            return null;
+        }
     }
 }

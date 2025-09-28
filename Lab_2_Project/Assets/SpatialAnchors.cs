@@ -9,7 +9,7 @@ public class SpatialAnchors : MonoBehaviour
 {
     //Specify controller to create Spatial Anchors
     [SerializeField] private Controller controller;
-    private int count = 0;
+    private int count = 1;
     // Spatial Anchor Prefab
     public GameObject anchorPrefab;
     private Canvas canvas;
@@ -36,12 +36,17 @@ public class SpatialAnchors : MonoBehaviour
         
         // Show anchor id
         idText = canvas.gameObject.transform.GetChild(0).GetComponent<TextMeshProUGUI>();
-        idText.text = "ID: " + count.ToString();
+        idText.text = "ID:" + count.ToString();
 
         // Show anchor position
         positionText = canvas.gameObject.transform.GetChild(1).GetComponent<TextMeshProUGUI>();
-        positionText.text = anchor.transform.GetChild(0).GetChild(0).position.ToString();
+        // anchor.transform.position = Vector3.zero;
 
+        //  NOTE (Stefan): idk why the proposed code displays the position of the children instead of the parent itself
+        // positionText.text = anchor.transform.GetChild(0).GetChild(0).position.ToString();
+
+        // NOTE (Stefan): Updated to the position of the parent object
+        positionText.text = anchor.transform.position.ToString();
         // Make the anchor become a Meta Quest Spatial Anchor
         anchor.AddComponent<OVRSpatialAnchor>();
 
