@@ -49,14 +49,14 @@ public class TCP : MonoBehaviour
     [Serializable]
     public class TransformedMessage
     {
-        public List<TransformedAnchor> data = new List<TransformedAnchor>();
+        public List<TransformedAnchor> transformedAnchors = new List<TransformedAnchor>();
     }
 
     [Serializable]
     public class TransformedAnchor
     {
         public int anchor_id;
-        public int marker_id;
+        // public int marker_id;
         public Vector3 original_position;
         public Vector3 transformed_position;
         // public Quaternion original_rotation;
@@ -129,7 +129,7 @@ public class TCP : MonoBehaviour
         // update anchor dictionary in case new anchors were created
         UpdateAnchorDictionary();
         
-        Debug.Log("Found Anchors: " + anchorObjects.Count);
+        // Debug.Log("Found Anchors: " + anchorObjects.Count);
 
         foreach (var kvp in anchorObjects)
         {
@@ -158,7 +158,8 @@ public class TCP : MonoBehaviour
 
     private void ProcessTransformedAnchors(TransformedMessage transformedMessage)
     {
-        foreach (var transformedAnchor in transformedMessage.data){
+        foreach (var transformedAnchor in transformedMessage.transformedAnchors){
+            Debug.Log("REICEIVED: " + transformedAnchor.anchor_id + " " +  transformedAnchor.transformed_position);
             if (anchorObjects.ContainsKey(transformedAnchor.anchor_id))
             {
                 GameObject anchorObj = anchorObjects[transformedAnchor.anchor_id];
@@ -168,11 +169,12 @@ public class TCP : MonoBehaviour
                     Vector3 newPosition = transformedAnchor.transformed_position;
                     // Quaternion newRotation = transformedAnchor.transformed_rotation;
                     
-                    float lerpSpeed = 5f * Time.deltaTime;
-                    anchorObj.transform.position = Vector3.Lerp(anchorObj.transform.position, newPosition, lerpSpeed);
+                    // float lerpSpeed = 5f * Time.deltaTime;
+                    // anchorObj.transform.position = Vector3.Lerp(anchorObj.transform.position, new Vector3(0f,0f,0f), lerpSpeed);
+                    anchorObj.transform.position = newPosition;
                     // anchorObj.transform.rotation = Quaternion.Lerp(anchorObj.transform.rotation, newRotation, lerpSpeed);
                     
-                    Debug.Log($"Updated Anchor {transformedAnchor.anchor_id} from Marker {transformedAnchor.marker_id}:");
+                    Debug.Log($"Updated Anchor {transformedAnchor.anchor_id}:");
                     Debug.Log($"  Position: {newPosition}");
                     // Debug.Log($"  Rotation: {newRotation}");
                 }
