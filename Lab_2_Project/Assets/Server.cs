@@ -81,7 +81,7 @@ public class TCP : MonoBehaviour
         if (Time.time > timer)
         {
             SendAnchorsToClient();
-            timer = Time.time + 2f;
+            timer = Time.time + 0.5f;
         }
         
         lock(Lock)
@@ -172,6 +172,7 @@ public class TCP : MonoBehaviour
                     // float lerpSpeed = 5f * Time.deltaTime;
                     // anchorObj.transform.position = Vector3.Lerp(anchorObj.transform.position, new Vector3(0f,0f,0f), lerpSpeed);
                     anchorObj.transform.position = newPosition;
+                    // anchorObj.transform.position = new Vector3(0f,0f,0f);
                     // anchorObj.transform.rotation = Quaternion.Lerp(anchorObj.transform.rotation, newRotation, lerpSpeed);
                     
                     Debug.Log($"Updated Anchor {transformedAnchor.anchor_id}:");
@@ -215,6 +216,7 @@ public class TCP : MonoBehaviour
                 while ((i = stream.Read(buffer, 0, buffer.Length)) != 0)
                 {
                     data = Encoding.UTF8.GetString(buffer, 0, i);
+                    Debug.Log("RAW DATA RECEIVED: " + data);
                     TransformedMessage message = DecodeTransformed(data);
                     // Add received message to que
                     lock(Lock)

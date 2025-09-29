@@ -138,12 +138,17 @@ def realsense_loop():
     arucoDetector = cv2.aruco.ArucoDetector(arucoDict, arucoParam)
 
     pipeline.start(config)
+    align = rs.align(rs.stream.color)
 
     try:
         while True:
             frames = pipeline.wait_for_frames()
-            depth_frame = frames.get_depth_frame()
-            color_frame = frames.get_color_frame()
+
+            aligned_framges = align.process(frames)
+
+            depth_frame = aligned_framges.get_depth_frame()
+            color_frame = aligned_framges.get_color_frame()
+            
             if not depth_frame or not color_frame:
                 continue
 
@@ -157,10 +162,20 @@ def realsense_loop():
 
             if ids is not None:
                 for id, marker in zip(ids, corners):
-                    x, y = marker[0][0]  # top-left corner
-                    depth = depth_frame.get_distance(int(x), int(y))
-                    coord = rs.rs2_deproject_pixel_to_point(intrinsics, [x, y], depth)
-                    local_coordinates[int(id[0])] = coord
+                    # marker[0] contains all 4 corners
+                    valid_coords = []
+                    
+                    for corner in marker[0]:
+                        x, y = corner
+                        depth = depth_frame.get_distance(int(x), int(y))
+                        
+                        if depth > 0:
+                            coord = rs.rs2_deproject_pixel_to_point(intrinsics, [x, y], depth)
+                            valid_coords.append(coord)
+                    
+                    if valid_coords:
+                        avg_coord = np.mean(valid_coords, axis=0)
+                        local_coordinates[int(id[0])] = avg_coord.tolist()
 
                 # update thread safety
                 with lock:

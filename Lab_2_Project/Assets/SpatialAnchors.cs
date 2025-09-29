@@ -48,7 +48,7 @@ public class SpatialAnchors : MonoBehaviour
         // NOTE (Stefan): Updated to the position of the parent object
         positionText.text = anchor.transform.position.ToString();
         // Make the anchor become a Meta Quest Spatial Anchor
-        anchor.AddComponent<OVRSpatialAnchor>();
+        // anchor.AddComponent<OVRSpatialAnchor>();
 
         // Increase Id by 1
         count += 1;
