@@ -7,6 +7,8 @@ from collections import defaultdict
 import threading
 import time
 
+from scipy.linalg import lstsq
+
 # HOST = "192.168.0.115"
 HOST = "127.0.0.1"   # localhost
 PORT = 13456
@@ -16,36 +18,71 @@ id_coordinates = {}
 lock = threading.Lock()
 
 def socket_client():
+    T_matrix = None
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.connect((HOST, PORT))
         while True:
             try:
-                # data = sock.recv(1024)
-                # if not data:
-                #     break
-                # data = data.decode('utf-8')
-                # msg = json.loads(data)
-                # print("Received from server:", msg)
                 msg = receive(sock)
-                print(id_coordinates)
+
+                # print("id_coordinates", id_coordinates)
 
                 # thread safety
                 with lock:
                     coords_to_send = id_coordinates.copy()
 
-                # msg['some_string'] = "From Client"
-                # msg['some_int'] -= 1
-                msg['id_coordinates'] = coords_to_send
-                
-				# list of anchors 
-                # now see which anchor is closes to which marker
-                # the anchor will be assined to the nearest marker
-                
-				
-                
+                print("sanchors" , msg['listOfAnchors'])
+                anchors = msg['listOfAnchors']
+                sorted_anchors = sorted(anchors, key=lambda x: x['id'])
+                quest_ids = [anchor['id'] for anchor in sorted_anchors]
 
+                quest_points = np.array([
+                    [anchor['position']['x'], anchor['position']['y'], anchor['position']['z']]
+                    for anchor in sorted_anchors
+                ])
+
+                # points = [
+                #     [anchor['position']['x'], anchor['position']['y'], anchor['position']['z']]
+                #     for anchor in msg['listOfAnchors']
+                # ]
+                # quest_points = np.array(points)
+                print("quest points", quest_points)
+                print("quest ids:", quest_ids)
+            
+                marker_points_list = []
+                for quest_id in quest_ids:
+                    if quest_id in id_coordinates:
+                        marker_points_list.append(id_coordinates[quest_id])
+                    else:
+                        print(f"WARNING: quest id {quest_id} not found in marker points")
+                        marker_points_list = []
+                        break
                 
-                send(sock, msg)
+                if not marker_points_list:
+                    continue
+
+                marker_points = np.array(marker_points_list)
+                
+                print("marker points", marker_points)
+                print("marker points dict", id_coordinates)
+
+                if quest_points.shape[0] == marker_points.shape[0]:
+                    quest_homogeneous = np.hstack([quest_points, np.ones((quest_points.shape[0], 1))])
+                    marker_homogeneous = np.hstack([marker_points, np.ones((marker_points.shape[0], 1))])
+
+                    if T_matrix is None and len(quest_points) == len(marker_points):
+                        # A = marker_homogeneous.reshape(-1, 4)
+                        # b = quest_homogeneous.reshape(-1, 1)
+                        A = marker_homogeneous
+                        b = quest_homogeneous
+
+
+                        # Transpose, _, _, _ = lstsq(A, b, rcond=None)
+                        T_transpose, _, _, _ = lstsq(A, b)
+                        T_matrix = T_transpose.T
+                        print("---------------------------------------------------TRANSFORMATION MATRIX:\n", T_matrix, flush=True)
+
+                # send(sock, msg)
                 time.sleep(0.2)  # delay
 
             except Exception as e:
@@ -60,9 +97,17 @@ def receive(sock):
     return msg
 
 def send(sock, msg):
-	data = json.dumps(msg)
-	sock.sendall(data.encode('utf-8'))
-	print("Sent to server:", msg)
+    data = json.dumps(msg)
+    sock.sendall(data.encode('utf-8'))
+    print("Sent to server:", msg)
+
+def transform_points(points, T_matrix):
+
+    points_homogeneous = np.hstack([points, np.ones((points.shape[0], 1))])
+    # Apply transformation
+    transformed = (T_matrix @ points_homogeneous.T).T
+    # Return 3D coordinates
+    return transformed[:, :3]
 
 
 # copied from lab1

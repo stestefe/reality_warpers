@@ -31,7 +31,6 @@ public class TCP : MonoBehaviour
 
     Transform[] allObjects;
 
-    // Define your own message
     [Serializable]
     public class Message
     {
@@ -43,85 +42,153 @@ public class TCP : MonoBehaviour
     {
         public int id;
         public Vector3 position;
+        // public Quaternion rotation;
+        // public int assigned_marker_id = -1;  
+    }
+
+    [Serializable]
+    public class TransformedMessage
+    {
+        public List<TransformedAnchor> data = new List<TransformedAnchor>();
+    }
+
+    [Serializable]
+    public class TransformedAnchor
+    {
+        public int anchor_id;
+        public int marker_id;
+        public Vector3 original_position;
+        public Vector3 transformed_position;
+        // public Quaternion original_rotation;
     }
 
     private float timer = 0;
     private static object Lock = new object();  // lock to prevent conflict in main thread and server thread
-    private List<Message> MessageQue = new List<Message>();
+    private List<TransformedMessage> MessageQueue = new List<TransformedMessage>();
 
+    private Dictionary<int, GameObject> anchorObjects = new Dictionary<int, GameObject>();
 
     private void Start()
     {
         thread = new Thread(new ThreadStart(SetupServer));
         thread.Start();
+    
+        UpdateAnchorDictionary();
     }
 
     private void Update()
     {
-        // Debug.Log("Hallo")
-        // Send message to client every 2 second
         if (Time.time > timer)
         {
-
-            Message message = new Message();
-            
-            
-            // TODO: set to values from RealSense
-            // message.id = 1;
-            // message.position = [0,0,0];
-            // Vector3 position = new Vector3(1f, 2f, 3f);
-            // message.position = position;
-
-            allObjects = FindObjectsOfType<Transform>();
-            var matchingObjects = allObjects
-                .Where(obj => obj.name == targetName)
-                .Select(obj => obj.gameObject)
-                .ToList();
-
-            Debug.Log("Found Anchors: " + matchingObjects.Count);
-
-            foreach (var obj in matchingObjects)
-            {
-                var fullIdText = obj.GetComponentInChildren<TextMeshProUGUI>().text;
-                var currentAnchorId = int.Parse(fullIdText.Split(":")[1]);
-
-                var currentAnchorPosition = obj.transform.position;
-
-                Anchor currentAnchor = new Anchor
-                {
-                    id = currentAnchorId,
-                    position = currentAnchorPosition
-                };
-
-                Debug.Log("Anchor" + currentAnchor.id + " " + currentAnchor.position);
-
-                message.listOfAnchors.Add(currentAnchor);
-            }
-            SendMessageToClient(message);
+            SendAnchorsToClient();
             timer = Time.time + 2f;
         }
-        // Process message que
+        
         lock(Lock)
         {
-            foreach (Message message in MessageQue)
+            foreach (TransformedMessage message in MessageQueue)
             {
-                // Unity only allow main thread to modify GameObjects.
-                // Spawn, Move, Rotate GameObjects here. 
-                // int id = message.id;
-
-                // float x = message.position.x;
-                // float y = message.position.y;
-                // float z = message.position.z;
-
-                // Debug.Log("Received from client: ---------" + "ID:" + id + " | x: " + x + " | y: " + y +  " | z: " + z);
+                ProcessTransformedAnchors(message);
             }
-            MessageQue.Clear();
+            MessageQueue.Clear();
         }
     }
 
+    private void UpdateAnchorDictionary()
+    {
+        anchorObjects.Clear();
+        allObjects = FindObjectsOfType<Transform>();
+        var matchingObjects = allObjects
+            .Where(obj => obj.name == targetName)
+            .Select(obj => obj.gameObject)
+            .ToList();
+
+        foreach (var obj in matchingObjects)
+        {
+            var textComponent = obj.GetComponentInChildren<TextMeshProUGUI>();
+            if (textComponent != null)
+            {
+                try
+                {
+                    var fullIdText = textComponent.text;
+                    var anchorId = int.Parse(fullIdText.Split(':')[1]);
+                    anchorObjects[anchorId] = obj;
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning($"Failed to parse anchor ID from text: {e.Message}");
+                }
+            }
+        }
+    }
+
+    private void SendAnchorsToClient()
+    {
+        Message message = new Message();
+        
+        // update anchor dictionary in case new anchors were created
+        UpdateAnchorDictionary();
+        
+        Debug.Log("Found Anchors: " + anchorObjects.Count);
+
+        foreach (var kvp in anchorObjects)
+        {
+            int anchorId = kvp.Key;
+            GameObject anchorObj = kvp.Value;
+            
+            if (anchorObj == null) continue;
+
+            var currentAnchorPosition = anchorObj.transform.position;
+            var currentAnchorRotation = anchorObj.transform.rotation;
+
+            Anchor currentAnchor = new Anchor
+            {
+                id = anchorId,
+                position = currentAnchorPosition,
+                // rotation = currentAnchorRotation,
+            };
+
+            // Debug.Log($"Anchor {currentAnchor.id} - Pos: {currentAnchor.position}, Rot: {currentAnchor.rotation}");
+            Debug.Log($"Anchor {currentAnchor.id} - Pos: {currentAnchor.position}");
+            message.listOfAnchors.Add(currentAnchor);
+        }
+        
+        SendMessageToClient(message);
+    }
+
+    private void ProcessTransformedAnchors(TransformedMessage transformedMessage)
+    {
+        foreach (var transformedAnchor in transformedMessage.data){
+            if (anchorObjects.ContainsKey(transformedAnchor.anchor_id))
+            {
+                GameObject anchorObj = anchorObjects[transformedAnchor.anchor_id];
+                
+                if (anchorObj != null)
+                {
+                    Vector3 newPosition = transformedAnchor.transformed_position;
+                    // Quaternion newRotation = transformedAnchor.transformed_rotation;
+                    
+                    float lerpSpeed = 5f * Time.deltaTime;
+                    anchorObj.transform.position = Vector3.Lerp(anchorObj.transform.position, newPosition, lerpSpeed);
+                    // anchorObj.transform.rotation = Quaternion.Lerp(anchorObj.transform.rotation, newRotation, lerpSpeed);
+                    
+                    Debug.Log($"Updated Anchor {transformedAnchor.anchor_id} from Marker {transformedAnchor.marker_id}:");
+                    Debug.Log($"  Position: {newPosition}");
+                    // Debug.Log($"  Rotation: {newRotation}");
+                }
+            }
+        }
+        
+    }
+
+    // private int GetAssignedMarkerId(int anchorId)
+    // {
+    //     return anchorId;
+    // }
+
     private void SetupServer()
     {
-        try
+       try
         {
             IPAddress localAddr = IPAddress.Parse(hostIP);
             // Debug.Log(localAddr);
@@ -129,7 +196,7 @@ public class TCP : MonoBehaviour
             server.Start();
             Debug.Log("SERVER STARTED");
 
-            byte[] buffer = new byte[1024];
+            byte[] buffer = new byte[2048];
             string data = null;
 
             while (true)
@@ -146,11 +213,11 @@ public class TCP : MonoBehaviour
                 while ((i = stream.Read(buffer, 0, buffer.Length)) != 0)
                 {
                     data = Encoding.UTF8.GetString(buffer, 0, i);
-                    Message message = Decode(data);
+                    TransformedMessage message = DecodeTransformed(data);
                     // Add received message to que
                     lock(Lock)
                     {
-                        MessageQue.Add(message);
+                        MessageQueue.Add(message);
                     }
                 }
                 client.Close();
@@ -174,21 +241,6 @@ public class TCP : MonoBehaviour
         thread.Abort();
     }
 
-    // public void SendMessageToClient(Message message)
-    // {
-    //     Debug.Log("HalloHalli");
-    //     Debug.Log(message.some_string);
-
-    //     string json = JsonUtility.ToJson(message);
-    //     byte[] msg = Encoding.UTF8.GetBytes(json);
-
-
-    //     // byte[] msg = Encoding.UTF8.GetBytes(Encode(message));
-    //     Debug.Log(msg.Length);
-    //     stream.Write(msg, 0, msg.Length);
-    //     Debug.Log("Sent: " + message);
-    // }
-
     public void SendMessageToClient(Message message)
     {
         if(stream == null){
@@ -198,25 +250,67 @@ public class TCP : MonoBehaviour
         byte[] msg = Encoding.UTF8.GetBytes(Encode(message));
         stream.Write(msg, 0, msg.Length);
         Debug.Log("Sent: " + message);
+    
+        // if(stream == null){
+        //     return;
+        // }
+        
+        // try
+        // {
+        //     string jsonData = Encode(message);
+        //     Debug.Log("Sending: " + jsonData);
+            
+        //     byte[] msg = Encoding.UTF8.GetBytes(jsonData + "\n");
+        //     stream.Write(msg, 0, msg.Length);
+            
+        //     Debug.Log($"Sent {message.listOfAnchors.Count} anchors to client");
+        // }
+        // catch (Exception e)
+        // {
+        //     Debug.LogError($"Error sending message to client: {e.Message}");
+        // }
     }
 
     // Encode message from struct to Json String
     public string Encode(Message message)
     {
-        // Debug.Log(message.listOfAnchors[0].);
         return JsonUtility.ToJson(message, true);
     }
 
-    // Decode messaage from Json String to struct
     public Message Decode(string json_string)
     {
-        try{
+        try
+        {
             Message msg = JsonUtility.FromJson<Message>(json_string);
             return msg;
         }
-        catch (Exception e){
+        catch (Exception e)
+        {
             Debug.LogError("Failed to decode message: " + e.Message);
             return null;
         }
     }
+
+    public TransformedMessage DecodeTransformed(string json_string)
+    {
+        try
+        {
+            TransformedMessage msg = JsonUtility.FromJson<TransformedMessage>(json_string);
+            return msg;
+        }
+        catch (Exception e)
+        {
+            Debug.LogError("Failed to decode transformed message: " + e.Message);
+            return null;
+        }
+    }
+
+    // public void SetMarkerAssignment(int anchorId, int markerId)
+    // {
+    //     if (anchorObjects.ContainsKey(anchorId))
+    //     {
+    //         // You could store this assignment in a dictionary or component
+    //         Debug.Log($"Assigned Anchor {anchorId} to Marker {markerId}");
+    //     }
+    // }
 }
