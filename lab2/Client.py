@@ -25,13 +25,11 @@ def socket_client():
             try:
                 msg = receive(sock)
 
-                # print("id_coordinates", id_coordinates)
-
                 # thread safety
                 with lock:
                     coords_to_send = id_coordinates.copy()
 
-                print("sanchors" , msg['listOfAnchors'])
+                print("sanchors", msg['listOfAnchors'], flush= True)
                 anchors = msg['listOfAnchors']
                 sorted_anchors = sorted(anchors, key=lambda x: x['id'])
                 quest_ids = [anchor['id'] for anchor in sorted_anchors]
@@ -41,13 +39,8 @@ def socket_client():
                     for anchor in sorted_anchors
                 ])
 
-                # points = [
-                #     [anchor['position']['x'], anchor['position']['y'], anchor['position']['z']]
-                #     for anchor in msg['listOfAnchors']
-                # ]
-                # quest_points = np.array(points)
-                print("quest points", quest_points)
-                print("quest ids:", quest_ids)
+                print("quest points", quest_points, flush = True)
+                print("quest ids:", quest_ids, flush = True)
             
                 marker_points_list = []
                 for quest_id in quest_ids:
@@ -63,51 +56,68 @@ def socket_client():
 
                 marker_points = np.array(marker_points_list)
                 
-                print("marker points", marker_points)
-                print("marker points dict", id_coordinates)
+                print("marker points", marker_points, flush = True)
+                print("marker points dict", id_coordinates, flush = True)
 
                 if quest_points.shape[0] == marker_points.shape[0]:
                     quest_homogeneous = np.hstack([quest_points, np.ones((quest_points.shape[0], 1))])
                     marker_homogeneous = np.hstack([marker_points, np.ones((marker_points.shape[0], 1))])
 
+                    # Calibration: Calculate transformation matrix once
                     if T_matrix is None and len(quest_points) == len(marker_points):
-                        # A = marker_homogeneous.reshape(-1, 4)
-                        # b = quest_homogeneous.reshape(-1, 1)
                         A = marker_homogeneous
                         b = quest_homogeneous
 
-
-                        # Transpose, _, _, _ = lstsq(A, b, rcond=None)
                         T_transpose, _, _, _ = lstsq(A, b)
                         T_matrix = T_transpose.T
                         print("---------------------------------------------------TRANSFORMATION MATRIX:\n", T_matrix, flush=True)
 
-                # send(sock, msg)
+                    if T_matrix is not None:
+                        transformed_homogeneous = (T_matrix @ marker_homogeneous.T).T
+                        transformed_points = transformed_homogeneous[:, :3]
+                        
+                        transformed_anchors = []
+                        for i, quest_id in enumerate(quest_ids):
+                            transformed_anchor = {
+                                'anchor_id': quest_id,
+                                # 'marker_id': quest_id,
+                                'original_position': {
+                                    'x': float(marker_points[i][0]),
+                                    'y': float(marker_points[i][1]),
+                                    'z': float(marker_points[i][2])
+                                },
+                                'transformed_position': {
+                                    'x': float(transformed_points[i][0]),
+                                    'y': float(transformed_points[i][1]),
+                                    'z': float(transformed_points[i][2])
+                                }
+                            }
+                            transformed_anchors.append(transformed_anchor)
+                        
+                        response_msg = {
+                            'transformedAnchors': transformed_anchors
+                        }
+                        
+                        print("Sending transformed anchors:", response_msg, flush = True)
+                        send(sock, response_msg)
+
                 time.sleep(0.2)  # delay
 
             except Exception as e:
-                print("Socket error:", e)
+                print("Socket error:", e, flush = True)
                 break
 
 def receive(sock):
     data = sock.recv(1024)
     data = data.decode('utf-8')
     msg = json.loads(data)
-    print("Received: ", msg)
+    print("Received: ", msg , flush = True)
     return msg
 
 def send(sock, msg):
     data = json.dumps(msg)
     sock.sendall(data.encode('utf-8'))
-    print("Sent to server:", msg)
-
-def transform_points(points, T_matrix):
-
-    points_homogeneous = np.hstack([points, np.ones((points.shape[0], 1))])
-    # Apply transformation
-    transformed = (T_matrix @ points_homogeneous.T).T
-    # Return 3D coordinates
-    return transformed[:, :3]
+    print("Sent to server:", msg, flush = True)
 
 
 # copied from lab1
