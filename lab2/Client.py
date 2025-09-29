@@ -64,7 +64,7 @@ def socket_client():
                     marker_homogeneous = np.hstack([marker_points, np.ones((marker_points.shape[0], 1))])
 
                     # Calibration: Calculate transformation matrix once
-                    if T_matrix is None and len(quest_points) == len(marker_points):
+                    if T_matrix is None and len(quest_points) == len(marker_points) and len(quest_points) >= 3:
                         A = marker_homogeneous
                         b = quest_homogeneous
 
