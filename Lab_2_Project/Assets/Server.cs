@@ -43,7 +43,6 @@ public class TCP : MonoBehaviour
         public int id;
         public Vector3 position;
         // public Quaternion rotation;
-        // public int assigned_marker_id = -1;  
     }
 
     [Serializable]
@@ -59,7 +58,6 @@ public class TCP : MonoBehaviour
         // public int marker_id;
         public Vector3 original_position;
         public Vector3 transformed_position;
-        // public Quaternion original_rotation;
     }
 
     private float timer = 0;
@@ -81,7 +79,7 @@ public class TCP : MonoBehaviour
         if (Time.time > timer)
         {
             SendAnchorsToClient();
-            timer = Time.time + 0.5f;
+            timer = Time.time + 0.25f;
         }
         
         lock(Lock)
@@ -139,6 +137,10 @@ public class TCP : MonoBehaviour
             if (anchorObj == null) continue;
 
             var currentAnchorPosition = anchorObj.transform.position;
+            Canvas canvas = anchorObj.GetComponentInChildren<Canvas>();
+            TextMeshProUGUI positionText = canvas.gameObject.transform.GetChild(1).GetComponent<TextMeshProUGUI>();
+            positionText.text = anchorObj.transform.position.ToString();
+
             var currentAnchorRotation = anchorObj.transform.rotation;
 
             Anchor currentAnchor = new Anchor
@@ -172,8 +174,6 @@ public class TCP : MonoBehaviour
                     // float lerpSpeed = 5f * Time.deltaTime;
                     // anchorObj.transform.position = Vector3.Lerp(anchorObj.transform.position, new Vector3(0f,0f,0f), lerpSpeed);
                     anchorObj.transform.position = newPosition;
-                    // anchorObj.transform.position = new Vector3(0f,0f,0f);
-                    // anchorObj.transform.rotation = Quaternion.Lerp(anchorObj.transform.rotation, newRotation, lerpSpeed);
                     
                     Debug.Log($"Updated Anchor {transformedAnchor.anchor_id}:");
                     Debug.Log($"  Position: {newPosition}");
@@ -183,11 +183,6 @@ public class TCP : MonoBehaviour
         }
         
     }
-
-    // private int GetAssignedMarkerId(int anchorId)
-    // {
-    //     return anchorId;
-    // }
 
     private void SetupServer()
     {
@@ -254,25 +249,6 @@ public class TCP : MonoBehaviour
         byte[] msg = Encoding.UTF8.GetBytes(Encode(message));
         stream.Write(msg, 0, msg.Length);
         Debug.Log("Sent: " + message);
-    
-        // if(stream == null){
-        //     return;
-        // }
-        
-        // try
-        // {
-        //     string jsonData = Encode(message);
-        //     Debug.Log("Sending: " + jsonData);
-            
-        //     byte[] msg = Encoding.UTF8.GetBytes(jsonData + "\n");
-        //     stream.Write(msg, 0, msg.Length);
-            
-        //     Debug.Log($"Sent {message.listOfAnchors.Count} anchors to client");
-        // }
-        // catch (Exception e)
-        // {
-        //     Debug.LogError($"Error sending message to client: {e.Message}");
-        // }
     }
 
     // Encode message from struct to Json String
@@ -308,13 +284,4 @@ public class TCP : MonoBehaviour
             return null;
         }
     }
-
-    // public void SetMarkerAssignment(int anchorId, int markerId)
-    // {
-    //     if (anchorObjects.ContainsKey(anchorId))
-    //     {
-    //         // You could store this assignment in a dictionary or component
-    //         Debug.Log($"Assigned Anchor {anchorId} to Marker {markerId}");
-    //     }
-    // }
 }
