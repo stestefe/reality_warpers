@@ -3,7 +3,7 @@ import json
 import pyrealsense2 as rs
 import numpy as np
 import cv2
-from collections import defaultdict
+from collections import defaultdict, deque
 import threading
 import time
 
@@ -15,6 +15,20 @@ PORT = 13456
 
 id_coordinates = {}
 lock = threading.Lock()
+
+# window averaging filter to avoid 
+WINDOW_SIZE = 5  
+position_history = defaultdict(lambda: deque(maxlen=WINDOW_SIZE)) # auto dequeuing oldest position to keep the recent ones
+
+def averageging_window_position(marker_id, position):
+    position_history[marker_id].append(position)
+    
+    if len(position_history[marker_id]) > 0:
+        positions_array = np.array(list(position_history[marker_id]))
+        smoothed = np.mean(positions_array, axis=0)
+        return smoothed.tolist()
+    
+    return position
 
 def socket_client():
     T_matrix = None
@@ -75,7 +89,7 @@ def socket_client():
                         T_matrix = T_transpose.T
                         print("---TRANSFORMATION MATRIX CALCULATED---\n", T_matrix, flush=True)
                         
-                        # sSend calibration message with the anchors to be deleted
+                        # ssend calibration message with the anchos to be deleted
                         transformed_anchors = []
                         for i, quest_id in enumerate(quest_ids):
                             transformed_anchor = {
@@ -103,7 +117,7 @@ def socket_client():
                         time.sleep(0.5)  # Give Unity time to process calibration
                         continue
                 
-                # TRACKING PHASE: send only currently visible markers
+                # TRACKING PHASE: send only currently visible markes with smoothing
                 if T_matrix is not None:
                     transformed_anchors = []
                     
@@ -113,16 +127,19 @@ def socket_client():
                     
                     if current_markers:
                         for marker_id, marker_pos in current_markers.items():
-                            # Transform the marker position
-                            marker_point = np.array([marker_pos[0], marker_pos[1], marker_pos[2], 1.0])
+                            # apply smoothing to raw marker position
+                            smoothed_pos = averageging_window_position(marker_id, marker_pos)
+                            
+                            # transform the smoothed marker position
+                            marker_point = np.array([smoothed_pos[0], smoothed_pos[1], smoothed_pos[2], 1.0])
                             transformed_point = (T_matrix @ marker_point)[:3]
                             
                             transformed_anchor = {
                                 'anchor_id': marker_id,
                                 'original_position': {
-                                    'x': float(marker_pos[0]),
-                                    'y': float(marker_pos[1]),
-                                    'z': float(marker_pos[2])
+                                    'x': float(smoothed_pos[0]),
+                                    'y': float(smoothed_pos[1]),
+                                    'z': float(smoothed_pos[2])
                                 },
                                 'transformed_position': {
                                     'x': float(transformed_point[0]),
@@ -136,7 +153,7 @@ def socket_client():
                             'transformedAnchors': transformed_anchors
                         }
                         
-                        print(f"Sending {len(transformed_anchors)} visible markers:", response_msg, flush=True)
+                        print(f"Sending {len(transformed_anchors)} visible markers (smoothed):", response_msg, flush=True)
                         send(sock, response_msg)
                     else:
                         # send empty message when no markers are visible
@@ -145,6 +162,14 @@ def socket_client():
                         }
                         print("No markers visible - sending empty message", flush=True)
                         send(sock, response_msg)
+                        
+                        # clear window position history for markers that are not visible
+                        with lock:
+                            visible_ids = set(id_coordinates.keys())
+                        all_ids = set(position_history.keys())
+                        for marker_id in all_ids - visible_ids:
+                            if len(position_history[marker_id]) == 0:
+                                del position_history[marker_id]
 
                 time.sleep(0.2)  # delay
 
@@ -226,7 +251,7 @@ def realsense_loop():
 
                 color_image = cv2.aruco.drawDetectedMarkers(color_image, corners, ids)
             else:
-                # No markers detected - clear coordinates
+                # no markers detected - clear coordinates
                 with lock:
                     id_coordinates = {}
 
