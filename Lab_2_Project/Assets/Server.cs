@@ -17,19 +17,27 @@ using TMPro;
 
 public class TCP : MonoBehaviour
 {
-    const string hostIP = "0.0.0.0"; // Select your IP
+    const string HOST_IP = "0.0.0.0"; // Select your IP
     // const string hostIP = "127.0.0.1"; // Select your IP
-    const int port = 13456; // Select your port
+    const int PORT = 13456; // Select your port
     TcpListener server = null;
     TcpClient client = null;
     NetworkStream stream = null;
     Thread thread;
 
+    const int MISSING_THRESHOLD = 5;
     // anchor position
     string targetName = "AnchorPrefab(Clone)";
-    List<GameObject> allAnchors = new List<GameObject>();
 
     Transform[] allObjects;
+
+    bool calibration_done = false;
+    
+    public GameObject greenObject;
+    
+    private int messageCounter = 0;
+
+    private Dictionary<int, MarkerData> activeMarkers = new Dictionary<int, MarkerData>();
 
     [Serializable]
     public class Message
@@ -66,11 +74,23 @@ public class TCP : MonoBehaviour
 
     private Dictionary<int, GameObject> anchorObjects = new Dictionary<int, GameObject>();
 
+    [Serializable]
+    public class MarkerData {
+        public int id;
+        public int lastSeenInMessage;
+        public GameObject markerObject;
+        public MarkerData(int id, int lastSeenInMessage, GameObject markerObject){
+            this.id = id;
+            this.lastSeenInMessage = lastSeenInMessage;
+            this.markerObject = markerObject;
+        }
+    }
+
     private void Start()
     {
         thread = new Thread(new ThreadStart(SetupServer));
         thread.Start();
-    
+
         UpdateAnchorDictionary();
     }
 
@@ -79,17 +99,19 @@ public class TCP : MonoBehaviour
         if (Time.time > timer)
         {
             SendAnchorsToClient();
-            timer = Time.time + 0.25f;
+            timer = Time.time + 0.5f;
         }
-        
-        lock(Lock)
+
+        lock (Lock)
         {
             foreach (TransformedMessage message in MessageQueue)
             {
+                messageCounter++;
                 ProcessTransformedAnchors(message);
             }
             MessageQueue.Clear();
         }
+        CleanupInactiveMarkers();
     }
 
     private void UpdateAnchorDictionary()
@@ -158,39 +180,129 @@ public class TCP : MonoBehaviour
         SendMessageToClient(message);
     }
 
+  
     private void ProcessTransformedAnchors(TransformedMessage transformedMessage)
     {
-        foreach (var transformedAnchor in transformedMessage.transformedAnchors){
-            Debug.Log("REICEIVED: " + transformedAnchor.anchor_id + " " +  transformedAnchor.transformed_position);
-            if (anchorObjects.ContainsKey(transformedAnchor.anchor_id))
+        // CALIBRATION PHASE: delete anchors used for calibration
+        if (calibration_done == false)
+        {
+            Debug.Log("CALIBRATION START");
+
+            List<int> anchorsToRemove = new List<int>();
+
+            foreach (var transformedAnchor in transformedMessage.transformedAnchors)
             {
-                GameObject anchorObj = anchorObjects[transformedAnchor.anchor_id];
-                
-                if (anchorObj != null)
+                if (anchorObjects.ContainsKey(transformedAnchor.anchor_id))
                 {
-                    Vector3 newPosition = transformedAnchor.transformed_position;
-                    // Quaternion newRotation = transformedAnchor.transformed_rotation;
-                    
-                    // float lerpSpeed = 5f * Time.deltaTime;
-                    // anchorObj.transform.position = Vector3.Lerp(anchorObj.transform.position, new Vector3(0f,0f,0f), lerpSpeed);
-                    anchorObj.transform.position = newPosition;
-                    
-                    Debug.Log($"Updated Anchor {transformedAnchor.anchor_id}:");
-                    Debug.Log($"  Position: {newPosition}");
-                    // Debug.Log($"  Rotation: {newRotation}");
+                    GameObject anchorObj = anchorObjects[transformedAnchor.anchor_id];
+                    if (anchorObj != null)
+                    {
+                        Debug.Log($"Destroying calibration anchor with ID: {transformedAnchor.anchor_id}");
+                        Destroy(anchorObj);
+                        anchorsToRemove.Add(transformedAnchor.anchor_id);
+                    }
                 }
             }
+
+            foreach (var anchorId in anchorsToRemove)
+            {
+                anchorObjects.Remove(anchorId);
+            }
+
+            calibration_done = true;
+            Debug.Log("CALIBRATION END - Anchor objects deleted");
+            return; // dont process markers during calibration
         }
-        
+
+        // TRACKING PHASE: Update marker positions
+        HashSet<int> seenMarkerIds = new HashSet<int>();
+
+        foreach (var transformedAnchor in transformedMessage.transformedAnchors)
+        {
+            int markerId = transformedAnchor.anchor_id;
+            seenMarkerIds.Add(markerId);
+
+            Debug.Log($"RECEIVED: Marker ID {markerId} at {transformedAnchor.transformed_position}");
+
+            if (activeMarkers.ContainsKey(markerId))
+            {
+                // update existing marker
+                MarkerData markerData = activeMarkers[markerId];
+                
+                if (markerData.markerObject != null)
+                {
+                    markerData.markerObject.transform.position = transformedAnchor.transformed_position;
+                    markerData.lastSeenInMessage = messageCounter;
+                    Debug.Log($"Updated marker {markerId} position");
+                }
+                else
+                {
+                    // object was destroyed, recreate it
+                    Debug.Log($"Recreating marker {markerId}");
+                    GameObject newMarker = Instantiate(greenObject, transformedAnchor.transformed_position, Quaternion.identity);
+                    markerData.markerObject = newMarker;
+                    markerData.lastSeenInMessage = messageCounter;
+                }
+            }
+            else
+            {
+                // create new marker
+                Debug.Log($"Creating new marker {markerId}");
+                Vector3 markerPosition = transformedAnchor.transformed_position;
+                GameObject currentGreenObject = Instantiate(greenObject, markerPosition, Quaternion.identity);
+                MarkerData currentMarkerData = new MarkerData(markerId, messageCounter, currentGreenObject);
+                activeMarkers[markerId] = currentMarkerData;
+            }
+        }
+
+        // update lastSeenInMessage for markers that weren't in this message
+        foreach (var kvp in activeMarkers)
+        {
+            if (!seenMarkerIds.Contains(kvp.Key))
+            {
+                Debug.Log($"Marker {kvp.Key} not seen in this message (last seen: {kvp.Value.lastSeenInMessage}, current: {messageCounter})");
+            }
+        }
+    }
+
+    
+    private void CleanupInactiveMarkers()
+    {
+        List<int> markersToRemove = new List<int>();
+
+        foreach (var kvp in activeMarkers)
+        {
+            int markerId = kvp.Key;
+            MarkerData markerData = kvp.Value;
+
+            int messagesSinceLastSeen = messageCounter - markerData.lastSeenInMessage;
+
+            if (messagesSinceLastSeen >= MISSING_THRESHOLD)
+            {
+                Debug.Log($"Marker {markerId} missing for {messagesSinceLastSeen} messages - destroying");
+                
+                if (markerData.markerObject != null)
+                {
+                    Destroy(markerData.markerObject);
+                }
+                
+                markersToRemove.Add(markerId);
+            }
+        }
+
+        foreach (var markerId in markersToRemove)
+        {
+            activeMarkers.Remove(markerId);
+        }
     }
 
     private void SetupServer()
     {
-       try
+        try
         {
-            IPAddress localAddr = IPAddress.Parse(hostIP);
+            IPAddress localAddr = IPAddress.Parse(HOST_IP);
             // Debug.Log(localAddr);
-            server = new TcpListener(localAddr, port);
+            server = new TcpListener(localAddr, PORT);
             server.Start();
             Debug.Log("SERVER STARTED");
 
@@ -214,7 +326,7 @@ public class TCP : MonoBehaviour
                     Debug.Log("RAW DATA RECEIVED: " + data);
                     TransformedMessage message = DecodeTransformed(data);
                     // Add received message to que
-                    lock(Lock)
+                    lock (Lock)
                     {
                         MessageQueue.Add(message);
                     }
