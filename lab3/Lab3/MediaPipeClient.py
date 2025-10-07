@@ -100,13 +100,13 @@ def main():
                     # CALIBRATION PHASE
                     if T_matrix is None:
                         if len(mediapipe_points) == len(anchors):
-                            skeleton_homogeneous = np.hstack([skeleton_points, np.ones((skeleton_points.shape[0], 1))])
+                            skeleton_homogeneous = np.hstack([skeleton_points, np.ones((len(skeleton_points), 1))])
                             mediapipe_homogenous = np.hstack([mediapipe_points, np.ones((mediapipe_points.shape[0], 1))])
 
                             A = skeleton_homogeneous
                             b = mediapipe_homogenous
 
-                            T_transpose, _, _, _ = lstsq(A,b)
+                            T_transpose, _, _, _ = lstsq(A, b)
                             T_matrix = T_transpose.T
                             print("---TRANSFORMATION MATRIX CALCULATED---\n", T_matrix, flush=True)
 
@@ -119,23 +119,23 @@ def main():
                             transformed_anchor = {
                                 'anchor_id': index,
                                 'original_position': {
-                                    'x' : float(mediapipe_point[0]),
-                                    'y' : float(mediapipe_point[1]),
-                                    'z' : float(mediapipe_point[2]),
+                                    'x': float(mediapipe_point[0]),
+                                    'y': float(mediapipe_point[1]),
+                                    'z': float(mediapipe_point[2]),
                                 },
-                                'transformed_position' : {
-                                    'x' : float(transformed_point[0]),
-                                    'y' : float(transformed_point[1]),
-                                    'z' : float(transformed_point[2]),
+                                'transformed_position': {
+                                    'x': float(transformed_point[0]),
+                                    'y': float(transformed_point[1]),
+                                    'z': float(transformed_point[2]),
                                 }
                             }
-
                             transformed_anchors.append(transformed_anchor)
-                            response_msg = {
-                                transformed_anchors.append(transformed_anchor)
-                            }
-                            print(f"Sending {len(transformed_anchors)} visible mediepipe landmarks:", response_msg, flush=True)
-                            send(sock, response_msg)
+                        
+                        response_msg = {
+                            'transformedAnchors': transformed_anchors
+                        }
+                        print(f"Sending {len(transformed_anchors)} visible mediapipe landmarks:", response_msg, flush=True)
+                        send(sock, response_msg)
                     else:
                         response_msg = {
                             'transformedAnchors': []
@@ -148,7 +148,7 @@ def main():
                     pass
                 # Show images
                 cv2.namedWindow('RealSense', cv2.WINDOW_AUTOSIZE)
-                color_image = cv2.flip(color_image,1)
+                color_image = cv2.flip(color_image, 1)
                 cv2.imshow('RealSense', color_image)
                 cv2.waitKey(1)
     finally:
@@ -163,9 +163,9 @@ def receive(sock):
     return msg
 
 def send(sock, msg):
-	data = json.dumps(msg)
-	sock.sendall(data.encode('utf-8'))
-	print("Sent: ", msg)
+    data = json.dumps(msg)
+    sock.sendall(data.encode('utf-8'))
+    print("Sent: ", msg)
 
 if __name__ == '__main__':
     main()
