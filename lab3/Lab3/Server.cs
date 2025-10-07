@@ -15,8 +15,8 @@ using UnityEngine;
 
 public class TCP : MonoBehaviour
 {
-    const string hostIP = "0.0.0.0"; // Select your IP
-    const int port = 13456; // Select your port
+    const string hostIP = "127.0.0.1"; // Select your IP
+    const int port = 80; // Select your port
     TcpListener server = null;
     TcpClient client = null;
     NetworkStream stream = null;
@@ -26,37 +26,19 @@ public class TCP : MonoBehaviour
     public Transform RHand;
     public Transform Head;
 
-    public Dictionary<string, int> bodyDict = new Dictionary<string, int>{
-        { "head", 0 },
-        { "leftHand", 1 },
-        { "rightHand", 2 }
-    };
-
+    // Define your own message
     [Serializable]
     public class Message
     {
-        public List<Anchor> listOfAnchors = new List<Anchor>();
-    }
-
-    [Serializable]
-    public class Anchor
-    {
-        public int id;
-        public Vector3 position;
-    }
-
-    [Serializable]
-    public class TransformedMessage
-    {
-        public List<TransformedAnchor> transformedAnchors = new List<TransformedAnchor>();
-    }
-
-    [Serializable]
-    public class TransformedAnchor
-    {
-        public int anchor_id;
-        public Vector3 original_position;
-        public Vector3 transformed_position;
+        public float LHand_x;
+        public float LHand_y;
+        public float LHand_z;
+        public float RHand_x;
+        public float RHand_y;
+        public float RHand_z;
+        public float Head_x;
+        public float Head_y;
+        public float Head_z;
     }
 
     private float timer = 0;
@@ -68,17 +50,11 @@ public class TCP : MonoBehaviour
     {
         thread = new Thread(new ThreadStart(SetupServer));
         thread.Start();
-    }   
+    }
 
     private void Update()
     {
-        if (Time.time > timer)
-        {
-            SendAnchorsToClient();
-            timer = Time.time + 0.5f;
-        }
-
-        lock (Lock)
+        lock(Lock)
         {
             foreach (Message msg in MessageQue)
             {
@@ -86,34 +62,6 @@ public class TCP : MonoBehaviour
             }
             MessageQue.Clear();
         }
-    }
-
-    private void SendAnchorsToClient()
-    {
-        Message message = new Message();
-        Anchor headAnchor = new Anchor
-        {
-            id = bodyDict["head"],
-            position = Head.transform.position,
-        };
-
-        Anchor leftHandAnchor = new Anchor
-        {
-            id = bodyDict["leftHand"],
-            position = LHand.transform.position,
-        };
-
-        Anchor rightHandAnchor = new Anchor
-        {
-            id = bodyDict["rightHand"],
-            position = RHand.transform.position,
-        };
-
-        message.listOfAnchors.Add(headAnchor);
-        message.listOfAnchors.Add(leftHandAnchor);
-        message.listOfAnchors.Add(rightHandAnchor);
-
-        SendMessageToClient(message);
     }
 
     private void SetupServer()
@@ -143,7 +91,7 @@ public class TCP : MonoBehaviour
                     data = Encoding.UTF8.GetString(buffer, 0, i);
                     Message message = Decode(data);
                     Debug.Log(message.ToString());
-                    lock (Lock)
+                    lock(Lock)
                     {
                         MessageQue.Add(message);
                     }
@@ -169,12 +117,8 @@ public class TCP : MonoBehaviour
         thread.Abort();
     }
 
-     public void SendMessageToClient(Message message)
+    public void SendMessageToClient(Message message)
     {
-        if(stream == null){
-            return;
-        }
-        Debug.Log(Encode(message));
         byte[] msg = Encoding.UTF8.GetBytes(Encode(message));
         stream.Write(msg, 0, msg.Length);
         Debug.Log("Sent: " + message);
@@ -195,11 +139,11 @@ public class TCP : MonoBehaviour
 
     public void Move(Message message)
     {
-        // LHand.localPosition = new Vector3(message.LHand_x, message.LHand_y, message.LHand_z);
-        // RHand.localPosition = new Vector3(message.RHand_x, message.RHand_y, message.RHand_z);
-        // Head.localPosition = new Vector3(message.Head_x, message.Head_y, message.Head_z);
-        // Debug.Log("Left Hand: " + LHand.position.ToString());
-        // Debug.Log("Right Hand: " + RHand.position.ToString());
-        // Debug.Log("Head: " + Head.position.ToString());
+        LHand.localPosition = new Vector3(message.LHand_x, message.LHand_y, message.LHand_z);
+        RHand.localPosition = new Vector3(message.RHand_x, message.RHand_y, message.RHand_z);
+        Head.localPosition = new Vector3(message.Head_x, message.Head_y, message.Head_z);
+        Debug.Log("Left Hand: " + LHand.position.ToString());
+        Debug.Log("Right Hand: " + RHand.position.ToString());
+        Debug.Log("Head: " + Head.position.ToString());
     }
 }
