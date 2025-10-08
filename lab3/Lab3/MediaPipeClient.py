@@ -92,8 +92,8 @@ def main():
 
                     # CALIBRATION PHASE
                     if T_matrix is None:
-                        calibration_samples.append((skeleton_points.copy(), unity_points.copy()))
-                        print(f"Calibration sample {len(calibration_samples)}/{CALIBRATION_SAMPLES_NEEDED} collected", flush=True)
+                        calibration_samples.append((skeleton_points.copy()[:3], unity_points.copy()))
+                        print(f"calibration sample {len(calibration_samples)}/{CALIBRATION_SAMPLES_NEEDED}", flush=True)
                         
                         if len(calibration_samples) >= CALIBRATION_SAMPLES_NEEDED:
                             all_skeleton = np.vstack([s for s, u in calibration_samples])
