@@ -15,8 +15,8 @@ using UnityEngine;
 
 public class TCP : MonoBehaviour
 {
-    const string hostIP = "0.0.0.0"; // Select your IP
-    const int port = 13456; // Select your port
+    const string hostIP = "0.0.0.0";
+    const int port = 13456;
     TcpListener server = null;
     TcpClient client = null;
     NetworkStream stream = null;
@@ -25,11 +25,15 @@ public class TCP : MonoBehaviour
     public Transform LHand;
     public Transform RHand;
     public Transform Head;
+    public Transform LFoot;
+    public Transform RFoot;
 
     public Dictionary<string, int> bodyDict = new Dictionary<string, int>{
         { "head", 0 },
         { "leftHand", 1 },
-        { "rightHand", 2 }
+        { "rightHand", 2 },
+        { "leftFoot", 3 },
+        { "rightFoot", 4 }
     };
 
     [Serializable]
@@ -63,12 +67,11 @@ public class TCP : MonoBehaviour
     private static object Lock = new object();
     private List<TransformedMessage> MessageQue = new List<TransformedMessage>();
 
-
     private void Start()
     {
         thread = new Thread(new ThreadStart(SetupServer));
         thread.Start();
-    }   
+    }
 
     private void Update()
     {
@@ -91,27 +94,36 @@ public class TCP : MonoBehaviour
     private void SendAnchorsToClient()
     {
         Message message = new Message();
-        Anchor headAnchor = new Anchor
+        
+        message.listOfAnchors.Add(new Anchor
         {
             id = bodyDict["head"],
             position = Head.transform.position,
-        };
+        });
 
-        Anchor leftHandAnchor = new Anchor
+        message.listOfAnchors.Add(new Anchor
         {
             id = bodyDict["leftHand"],
             position = LHand.transform.position,
-        };
+        });
 
-        Anchor rightHandAnchor = new Anchor
+        message.listOfAnchors.Add(new Anchor
         {
             id = bodyDict["rightHand"],
             position = RHand.transform.position,
-        };
+        });
 
-        message.listOfAnchors.Add(headAnchor);
-        message.listOfAnchors.Add(leftHandAnchor);
-        message.listOfAnchors.Add(rightHandAnchor);
+        message.listOfAnchors.Add(new Anchor
+        {
+            id = bodyDict["leftFoot"],
+            position = LFoot.transform.position,
+        });
+
+        message.listOfAnchors.Add(new Anchor
+        {
+            id = bodyDict["rightFoot"],
+            position = RFoot.transform.position,
+        });
 
         SendMessageToClient(message);
     }
@@ -124,7 +136,7 @@ public class TCP : MonoBehaviour
             server = new TcpListener(localAddr, port);
             server.Start();
 
-            byte[] buffer = new byte[1024];
+            byte[] buffer = new byte[4096];
             string data = null;
 
             while (true)
@@ -136,16 +148,16 @@ public class TCP : MonoBehaviour
                 data = null;
                 stream = client.GetStream();
 
-                // Receive message from client    
                 int i;
                 while ((i = stream.Read(buffer, 0, buffer.Length)) != 0)
                 {
                     data = Encoding.UTF8.GetString(buffer, 0, i);
                     TransformedMessage message = DecodeTransformed(data);
                     Debug.Log(message.ToString());
-                    lock (Lock)
-                    {
-                        MessageQue.Add(message);
+                        lock (Lock)
+                        {
+                            MessageQue.Add(message);
+                        }
                     }
                 }
                 client.Close();
@@ -164,29 +176,27 @@ public class TCP : MonoBehaviour
     private void OnApplicationQuit()
     {
         stream.Close();
-        client.Close();
-        server.Stop();
-        thread.Abort();
+         client.Close();
+         server.Stop();
+         thread.Abort();
     }
 
-     public void SendMessageToClient(Message message)
+    public void SendMessageToClient(Message message)
     {
-        if(stream == null){
+        if (stream == null)
+        {
             return;
         }
-        Debug.Log(Encode(message));
         byte[] msg = Encoding.UTF8.GetBytes(Encode(message));
         stream.Write(msg, 0, msg.Length);
         Debug.Log("Sent: " + message);
     }
 
-    // Encode message from struct to Json String
     public string Encode(Message message)
     {
         return JsonUtility.ToJson(message, true);
     }
 
-    // Decode messaage from Json String to struct
     public Message Decode(string json_string)
     {
         try
@@ -200,7 +210,6 @@ public class TCP : MonoBehaviour
             return null;
         }
     }
-
 
     public TransformedMessage DecodeTransformed(string json_string)
     {
@@ -218,23 +227,31 @@ public class TCP : MonoBehaviour
 
     public void Move(TransformedMessage message)
     {
-        for (int i = 0; i < message.transformedAnchors.Count; i++)
+        foreach (TransformedAnchor anchor in message.transformedAnchors)
         {
-            switch (i)
+            switch (anchor.anchor_id)
             {
-                case 0:
-                    Head.position = message.transformedAnchors[i].transformed_position;
+                case 0: // head
+                    Head.position = anchor.transformed_position;
+                    Debug.Log("Head: " + Head.position.ToString());
                     break;
-                case 1:
-                    LHand.position = message.transformedAnchors[i].transformed_position;
+                case 1: // leftHand
+                    LHand.position = anchor.transformed_position;
+                    Debug.Log("Left Hand: " + LHand.position.ToString());
                     break;
-                case 2:
-                    RHand.position = message.transformedAnchors[i].transformed_position;
+                case 2: // rightHand
+                    RHand.position = anchor.transformed_position;
+                    Debug.Log("Right Hand: " + RHand.position.ToString());
+                    break;
+                case 3: // leftFoot
+                    LFoot.position = anchor.transformed_position;
+                    Debug.Log("LeftFoot: " + LFoot.position.ToString());
+                    break;
+                case 4: // rightFoot
+                    RFoot.position = anchor.transformed_position;
+                    Debug.Log("RightFoot: " + RFoot.position.ToString());
                     break;
             }
-            Debug.Log("Left Hand: " + LHand.position.ToString());
-            Debug.Log("Right Hand: " + RHand.position.ToString());
-            Debug.Log("Head: " + Head.position.ToString());
         }
     }
 }

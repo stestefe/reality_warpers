@@ -61,27 +61,50 @@ class MediaPipe:
       return rs.rs2_deproject_pixel_to_point(depth_intrinsics, [x, y], depth) if depth > 0 else None
     
     def skeleton(self, image, results, depth_frame):
-      "Return 3D coordinates of left hand, right hand and nose"
-      if results.pose_landmarks is None:
-        return None
-      head3D = self.point_to_3D(results.pose_landmarks.landmark[self.mp_holistic.PoseLandmark.NOSE],
-                                                image, depth_frame)
-      if head3D is None:
-        return None
-      Head_x, Head_y, Head_z = head3D
-      rWrist3D =  self.point_to_3D(results.pose_landmarks.landmark[self.mp_holistic.PoseLandmark.RIGHT_WRIST],
-                                                image, depth_frame)
-      if rWrist3D is None:
-        return None
-      RHand_x, RHand_y, RHand_z = rWrist3D
-
-      lWrist3D = self.point_to_3D(results.pose_landmarks.landmark[self.mp_holistic.PoseLandmark.LEFT_WRIST],
-                                                image, depth_frame)
-      if lWrist3D is None:
-        return None
-      LHand_x, LHand_y, LHand_z = lWrist3D
-
-      msg = {'LHand_x': -1*LHand_x, 'LHand_y': -1*LHand_y+1.5, 'LHand_z': -1*LHand_z,
-             'RHand_x': -1*RHand_x, 'RHand_y': -1*RHand_y+1.5, 'RHand_z': -1*RHand_z,
-             'Head_x': -1*Head_x, 'Head_y': -1*Head_y+1.5, 'Head_z': -1*Head_z,}
-      return msg
+        "Return 3D coordinates of head, hands, and feet"
+        if results.pose_landmarks is None:
+            return None
+        
+        head3D = self.point_to_3D(
+            results.pose_landmarks.landmark[self.mp_holistic.PoseLandmark.NOSE],
+            image, depth_frame)
+        if head3D is None:
+            return None
+        Head_x, Head_y, Head_z = head3D
+        
+        rWrist3D = self.point_to_3D(
+            results.pose_landmarks.landmark[self.mp_holistic.PoseLandmark.RIGHT_WRIST],
+            image, depth_frame)
+        if rWrist3D is None:
+            return None
+        RHand_x, RHand_y, RHand_z = rWrist3D
+        
+        lWrist3D = self.point_to_3D(
+            results.pose_landmarks.landmark[self.mp_holistic.PoseLandmark.LEFT_WRIST],
+            image, depth_frame)
+        if lWrist3D is None:
+            return None
+        LHand_x, LHand_y, LHand_z = lWrist3D
+        
+        lFoot3D = self.point_to_3D(
+            results.pose_landmarks.landmark[self.mp_holistic.PoseLandmark.LEFT_ANKLE],
+            image, depth_frame)
+        if lFoot3D is None:
+            return None
+        LFoot_x, LFoot_y, LFoot_z = lFoot3D
+        
+        rFoot3D = self.point_to_3D(
+            results.pose_landmarks.landmark[self.mp_holistic.PoseLandmark.RIGHT_ANKLE],
+            image, depth_frame)
+        if rFoot3D is None:
+            return None
+        RFoot_x, RFoot_y, RFoot_z = rFoot3D
+        
+        msg = {
+            'LHand_x': LHand_x, 'LHand_y': LHand_y, 'LHand_z': LHand_z,
+            'RHand_x': RHand_x, 'RHand_y': RHand_y, 'RHand_z': RHand_z,
+            'Head_x': Head_x, 'Head_y': Head_y, 'Head_z': Head_z,
+            'LFoot_x': LFoot_x, 'LFoot_y': LFoot_y, 'LFoot_z': LFoot_z,
+            'RFoot_x': RFoot_x, 'RFoot_y': RFoot_y, 'RFoot_z': RFoot_z,
+        }
+        return msg

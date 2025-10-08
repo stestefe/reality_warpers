@@ -13,6 +13,7 @@ PORT = 13456
 def main():
     mp = MediaPipe()
     
+    # Configure depth and color streams
     pipeline = rs.pipeline()
     config = rs.config()
 
@@ -70,7 +71,9 @@ def main():
                 skeleton_points = np.array([
                     [skeleton_data['Head_x'], skeleton_data['Head_y'], skeleton_data['Head_z']],
                     [skeleton_data['LHand_x'], skeleton_data['LHand_y'], skeleton_data['LHand_z']],
-                    [skeleton_data['RHand_x'], skeleton_data['RHand_y'], skeleton_data['RHand_z']]
+                    [skeleton_data['RHand_x'], skeleton_data['RHand_y'], skeleton_data['RHand_z']],
+                    [skeleton_data['LFoot_x'], skeleton_data['LFoot_y'], skeleton_data['LFoot_z']],
+                    [skeleton_data['RFoot_x'], skeleton_data['RFoot_y'], skeleton_data['RFoot_z']]
                 ])
 
                 print("MediaPipe Skeleton:", skeleton_data, flush=True)
@@ -95,8 +98,8 @@ def main():
                         if len(calibration_samples) >= CALIBRATION_SAMPLES_NEEDED:
                             all_skeleton = np.vstack([s for s, u in calibration_samples])
                             all_unity = np.vstack([u for s, u in calibration_samples])
-                            
 
+                            
                             skeleton_homogeneous = np.hstack([all_skeleton, np.ones((all_skeleton.shape[0], 1))])
                             
                             T_transpose, residuals, rank, s = lstsq(skeleton_homogeneous, all_unity)
@@ -137,7 +140,7 @@ def main():
                             transformed_anchors.append(transformed_anchor)
                         
                         response_msg = {'transformedAnchors': transformed_anchors}
-                        print(f"------ Sending transformed positions:", response_msg, flush=True)
+                        print(f"Sending transformed positions:", response_msg, flush=True)
                         send(sock, response_msg)
                     else:
                         response_msg = {'transformedAnchors': []}
