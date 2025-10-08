@@ -13,7 +13,6 @@ PORT = 13456
 def main():
     mp = MediaPipe()
     
-    # Configure depth and color streams
     pipeline = rs.pipeline()
     config = rs.config()
 
@@ -102,7 +101,7 @@ def main():
                             
                             skeleton_homogeneous = np.hstack([all_skeleton, np.ones((all_skeleton.shape[0], 1))])
                             
-                            T_transpose, residuals, rank, s = lstsq(skeleton_homogeneous, all_unity)
+                            T_transpose, _, _, s = lstsq(skeleton_homogeneous, all_unity)
                             T_matrix = T_transpose.T
                             
                             print("=" * 50)
