@@ -13805,6 +13805,9 @@ MonoBehaviour:
   RFoot: {fileID: 842591156}
   yBot: {fileID: 1236795920}
   VrRig: {fileID: 372933319}
+  boneRenderer: {fileID: 0}
+  rigBuilder: {fileID: 0}
+  currentlyJumpingJack: 0
 --- !u!4 &1220775320
 Transform:
   m_ObjectHideFlags: 0
