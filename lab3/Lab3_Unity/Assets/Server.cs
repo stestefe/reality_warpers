@@ -61,7 +61,7 @@ public class TCP : MonoBehaviour
 
     private float timer = 0;
     private static object Lock = new object();
-    private List<Message> MessageQue = new List<Message>();
+    private List<TransformedMessage> MessageQue = new List<TransformedMessage>();
 
 
     private void Start()
@@ -80,7 +80,7 @@ public class TCP : MonoBehaviour
 
         lock (Lock)
         {
-            foreach (Message msg in MessageQue)
+            foreach (TransformedMessage msg in MessageQue)
             {
                 Move(msg);
             }
@@ -141,7 +141,7 @@ public class TCP : MonoBehaviour
                 while ((i = stream.Read(buffer, 0, buffer.Length)) != 0)
                 {
                     data = Encoding.UTF8.GetString(buffer, 0, i);
-                    Message message = Decode(data);
+                    TransformedMessage message = DecodeTransformed(data);
                     Debug.Log(message.ToString());
                     lock (Lock)
                     {
@@ -189,17 +189,52 @@ public class TCP : MonoBehaviour
     // Decode messaage from Json String to struct
     public Message Decode(string json_string)
     {
-        Message msg = JsonUtility.FromJson<Message>(json_string);
-        return msg;
+        try
+        {
+            Message msg = JsonUtility.FromJson<Message>(json_string);
+            return msg;
+        }
+        catch (Exception e)
+        {
+            Debug.LogError("Failed to decode message: " + e.Message);
+            return null;
+        }
     }
 
-    public void Move(Message message)
+
+    public TransformedMessage DecodeTransformed(string json_string)
     {
-        // LHand.localPosition = new Vector3(message.LHand_x, message.LHand_y, message.LHand_z);
-        // RHand.localPosition = new Vector3(message.RHand_x, message.RHand_y, message.RHand_z);
-        // Head.localPosition = new Vector3(message.Head_x, message.Head_y, message.Head_z);
-        // Debug.Log("Left Hand: " + LHand.position.ToString());
-        // Debug.Log("Right Hand: " + RHand.position.ToString());
-        // Debug.Log("Head: " + Head.position.ToString());
+        try
+        {
+            TransformedMessage msg = JsonUtility.FromJson<TransformedMessage>(json_string);
+            return msg;
+        }
+        catch (Exception e)
+        {
+            Debug.LogError("Failed to decode transformed message: " + e.Message);
+            return null;
+        }
+    }
+
+    public void Move(TransformedMessage message)
+    {
+        for (int i = 0; i < message.transformedAnchors.Count; i++)
+        {
+            switch (i)
+            {
+                case 0:
+                    Head.localPosition = message.transformedAnchors[i].transformed_position;
+                    break;
+                case 1:
+                    LHand.localPosition = message.transformedAnchors[i].transformed_position;
+                    break;
+                case 2:
+                    RHand.localPosition = message.transformedAnchors[i].transformed_position;
+                    break;
+            }
+            Debug.Log("Left Hand: " + LHand.position.ToString());
+            Debug.Log("Right Hand: " + RHand.position.ToString());
+            Debug.Log("Head: " + Head.position.ToString());
+        }
     }
 }
