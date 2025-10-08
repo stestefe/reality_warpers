@@ -154,6 +154,9 @@ public class TCP : MonoBehaviour
                     data = Encoding.UTF8.GetString(buffer, 0, i);
                     TransformedMessage message = DecodeTransformed(data);
                     Debug.Log(message.ToString());
+                    
+                    if (message != null)
+                    {
                         lock (Lock)
                         {
                             MessageQue.Add(message);
@@ -176,9 +179,9 @@ public class TCP : MonoBehaviour
     private void OnApplicationQuit()
     {
         stream.Close();
-         client.Close();
-         server.Stop();
-         thread.Abort();
+        client.Close();
+        server.Stop();
+        thread.Abort();
     }
 
     public void SendMessageToClient(Message message)
@@ -245,11 +248,11 @@ public class TCP : MonoBehaviour
                     break;
                 case 3: // leftFoot
                     LFoot.position = anchor.transformed_position;
-                    Debug.Log("LeftFoot: " + LFoot.position.ToString());
+                    Debug.Log("Left Foot: " + LFoot.position.ToString());
                     break;
                 case 4: // rightFoot
                     RFoot.position = anchor.transformed_position;
-                    Debug.Log("RightFoot: " + RFoot.position.ToString());
+                    Debug.Log("Right Foot: " + RFoot.position.ToString());
                     break;
             }
         }
