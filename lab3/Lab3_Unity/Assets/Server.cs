@@ -91,28 +91,35 @@ public class TCP : MonoBehaviour
         thread.Start();
     }
 
+    private float waitTime = 2.0f;
+    private float jumpingTimer = 0.0f;
+    public bool currentlyJumpingJack = false;
+
     private void Update()
     {
+        if (currentlyJumpingJack)
+        {
+            jumpingTimer += Time.deltaTime;
+            if (jumpingTimer > waitTime)
+            {
+                playerAnimation.SetBool("JumpingJack", false);
+                boneRenderer.enabled = true;
+                rigBuilder.enabled = true;
+                VrRig.SetActive(true);
+                jumpingTimer = 0.0f;
+                currentlyJumpingJack = false;
+            }
+        }
 
+        // TODO
         if (Input.GetKeyDown(KeyCode.Q))
         {
             Debug.Log("--------------------- PRESS KEY Q----------------------");
-
-            if (playerAnimation.GetBool("JumpingJack"))
-            {
-                playerAnimation.SetBool("JumpingJack", false);
-                boneRenderer.enabled = true; 
-                rigBuilder.enabled = true; 
-                VrRig.SetActive(true); 
-
-            }
-            else
-            {
-                playerAnimation.SetBool("JumpingJack", true);
-                boneRenderer.enabled = false;
-                rigBuilder.enabled = false;
-                VrRig.SetActive(false);
-            }
+            boneRenderer.enabled = false;
+            rigBuilder.enabled = false;
+            VrRig.SetActive(false);
+            playerAnimation.SetBool("JumpingJack", true);
+            currentlyJumpingJack = true;
         }
 
         if (Time.time > timer)
@@ -274,6 +281,10 @@ public class TCP : MonoBehaviour
 
     public void Move(TransformedMessage message)
     {
+        float DISTANCE_THRESHHOLD = 1f;
+        Vector3 leftHandPosition = Vector3.zero;
+        Vector3 rightHandPosition = Vector3.zero;
+
         foreach (TransformedAnchor anchor in message.transformedAnchors)
         {
             switch (anchor.anchor_id)
@@ -284,10 +295,12 @@ public class TCP : MonoBehaviour
                     break;
                 case 1: // leftHand
                     LHand.position = anchor.transformed_position;
+                    leftHandPosition = LHand.position;
                     Debug.Log("Left Hand: " + LHand.position.ToString());
                     break;
                 case 2: // rightHand
                     RHand.position = anchor.transformed_position;
+                    rightHandPosition = RHand.position;
                     Debug.Log("Right Hand: " + RHand.position.ToString());
                     break;
                 case 3: // leftFoot
@@ -298,6 +311,21 @@ public class TCP : MonoBehaviour
                     RFoot.position = anchor.transformed_position;
                     Debug.Log("Right Foot: " + RFoot.position.ToString());
                     break;
+            }
+
+            if (leftHandPosition != Vector3.zero && rightHandPosition != Vector3.zero)
+            {
+                float dist = Vector3.Distance(leftHandPosition, rightHandPosition);
+                Debug.Log("---------- THIS IS MY DISTANCE ------------" + dist);
+                if (dist <= DISTANCE_THRESHHOLD)
+                {
+                    Debug.Log("---------- I AM JUMPINGGGGGGGGG ------------" + dist);
+                    boneRenderer.enabled = false;
+                    rigBuilder.enabled = false;
+                    VrRig.SetActive(false);
+                    playerAnimation.SetBool("JumpingJack", true);
+                    currentlyJumpingJack = true;
+                }
             }
         }
     }
