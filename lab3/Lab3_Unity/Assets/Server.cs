@@ -12,6 +12,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using UnityEngine;
+using UnityEngine.Animations.Rigging;
 
 public class TCP : MonoBehaviour
 {
@@ -22,11 +23,24 @@ public class TCP : MonoBehaviour
     NetworkStream stream = null;
     Thread thread;
 
+    Animator playerAnimation;
+
     public Transform LHand;
     public Transform RHand;
     public Transform Head;
     public Transform LFoot;
     public Transform RFoot;
+
+    public GameObject yBot;
+
+    // public GameObject boneRenderer;
+
+    // public GameObject RigBuilder;
+    public GameObject VrRig;
+
+    public BoneRenderer boneRenderer;
+
+    public RigBuilder rigBuilder;
 
     public Dictionary<string, int> bodyDict = new Dictionary<string, int>{
         { "head", 0 },
@@ -70,11 +84,37 @@ public class TCP : MonoBehaviour
     private void Start()
     {
         thread = new Thread(new ThreadStart(SetupServer));
+        playerAnimation = yBot.GetComponent<Animator>();
+        rigBuilder = yBot.GetComponent<RigBuilder>();
+        boneRenderer = yBot.GetComponent<BoneRenderer>();
+
         thread.Start();
     }
 
     private void Update()
     {
+
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            Debug.Log("--------------------- PRESS KEY Q----------------------");
+
+            if (playerAnimation.GetBool("JumpingJack"))
+            {
+                playerAnimation.SetBool("JumpingJack", false);
+                boneRenderer.enabled = true; 
+                rigBuilder.enabled = true; 
+                VrRig.SetActive(true); 
+
+            }
+            else
+            {
+                playerAnimation.SetBool("JumpingJack", true);
+                boneRenderer.enabled = false;
+                rigBuilder.enabled = false;
+                VrRig.SetActive(false);
+            }
+        }
+
         if (Time.time > timer)
         {
             SendAnchorsToClient();
@@ -93,6 +133,10 @@ public class TCP : MonoBehaviour
 
     private void SendAnchorsToClient()
     {
+        if (VrRig == null)
+        {
+            return;
+        }
         Message message = new Message();
         
         message.listOfAnchors.Add(new Anchor
