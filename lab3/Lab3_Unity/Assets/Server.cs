@@ -223,13 +223,13 @@ public class TCP : MonoBehaviour
             switch (i)
             {
                 case 0:
-                    Head.localPosition = message.transformedAnchors[i].transformed_position;
+                    Head.position = message.transformedAnchors[i].transformed_position;
                     break;
                 case 1:
-                    LHand.localPosition = message.transformedAnchors[i].transformed_position;
+                    LHand.position = message.transformedAnchors[i].transformed_position;
                     break;
                 case 2:
-                    RHand.localPosition = message.transformedAnchors[i].transformed_position;
+                    RHand.position = message.transformedAnchors[i].transformed_position;
                     break;
             }
             Debug.Log("Left Hand: " + LHand.position.ToString());
