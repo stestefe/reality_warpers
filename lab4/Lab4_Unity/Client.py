@@ -219,18 +219,6 @@ def socket_client():
                 print("Socket error:", e, flush=True)
                 break
 
-def receive(sock):
-    data = sock.recv(1024)
-    data = data.decode('utf-8')
-    msg = json.loads(data)
-    print("Received:", msg, flush=True)
-    return msg
-
-def send(sock, msg):
-    data = json.dumps(msg)
-    sock.sendall(data.encode('utf-8'))
-    print("Sent to server:", msg, flush=True)
-
 def realsense_loop():
     global id_coordinates, id_rotations
     pipeline = rs.pipeline()
@@ -317,6 +305,18 @@ def realsense_loop():
     finally:
         pipeline.stop()
         cv2.destroyAllWindows()
+
+def receive(sock):
+    data = sock.recv(1024)
+    data = data.decode('utf-8')
+    msg = json.loads(data)
+    print("Received:", msg, flush=True)
+    return msg
+
+def send(sock, msg):
+    data = json.dumps(msg)
+    sock.sendall(data.encode('utf-8'))
+    print("Sent to server:", msg, flush=True)
 
 if __name__ == "__main__":
     # start thread with socket code
