@@ -42,6 +42,10 @@ def socket_client():
     config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
     config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
 
+    arucoDict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_6X6_1000)
+    arucoParam = cv2.aruco.DetectorParameters()
+    arucoDetector = cv2.aruco.ArucoDetector(arucoDict, arucoParam)
+
     pipeline.start(config)
     align_to = rs.stream.color
     align = rs.align(align_to)
@@ -50,6 +54,7 @@ def socket_client():
     calibration_samples = []
     CALIBRATION_SAMPLES_NEEDED = 5
     
+    arcuo_coordinates = {}
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.connect((HOST, PORT))
@@ -65,8 +70,14 @@ def socket_client():
                     continue
 
                 color_image = np.asanyarray(color_frame.get_data())
+                # depth_image = np.asanyarray(depth_frame.get_data())    
+
                 detection_results = mp.detect(color_image)
                 color_image = mp.draw_landmarks_on_image(color_image, detection_results)
+
+                corners, ids, _ = arucoDetector.detectMarkers(color_image)
+                # print(corners, ids, flush = True)
+                intrinsics = depth_frame.profile.as_video_stream_profile().get_intrinsics()
                 
                 skeleton_data = mp.skeleton(color_image, detection_results, depth_frame)
                 if skeleton_data is None:
@@ -75,7 +86,8 @@ def socket_client():
                     cv2.imshow('RealSense', color_image)
                     cv2.waitKey(1)
                     continue
-                
+
+                print("Hallo1", ids)
                 skeleton_points = np.array([
                     [skeleton_data['Head_x'], skeleton_data['Head_y'], skeleton_data['Head_z']],
                     [skeleton_data['LHand_x'], skeleton_data['LHand_y'], skeleton_data['LHand_z']],
@@ -86,6 +98,28 @@ def socket_client():
 
                 print("MediaPipe Skeleton:", skeleton_data, flush=True)
                 
+                print(ids)
+                if ids is not None:
+                    for id, marker in zip(ids,corners):
+                        valid_coordinates = []
+
+                        for corner in marker[0]:
+                            x,y = corner
+                            depth = depth_frame.get_distance(int(x), int(y))
+
+                            if depth > 0:
+                                coord = rs.rs2_deproject_pixel_to_point(intrinsics, [x, y], depth)
+                                valid_coordinates.append(coord)
+                        
+                        if len(valid_coordinates) == 4:
+                            avg_coordinates = np.mean(valid_coordinates, axis = 0)
+                            arcuo_coordinates[int(id[0])] = avg_coordinates
+
+                # color_image = cv2.aruco.drawDetectedMarkers(color_image, corners, ids)
+                    print("IDS", ids)
+                    print("Corners", corners)
+                    cv2.aruco.drawDetectedMarkers(color_image, corners, ids)
+
                 try:
                     msg = receive(sock)
                     anchors = msg['listOfAnchors']
@@ -172,83 +206,6 @@ def socket_client():
         pipeline.stop()
         cv2.destroyAllWindows()
 
-def realsense_loop():
-    global id_coordinates, id_rotations
-    pipeline = rs.pipeline()
-    config = rs.config()
-
-    pipeline_wrapper = rs.pipeline_wrapper(pipeline)
-    pipeline_profile = config.resolve(pipeline_wrapper)
-    device = pipeline_profile.get_device()
-
-    config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
-    config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
-
-    arucoDict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_6X6_1000)
-    arucoParam = cv2.aruco.DetectorParameters()
-    arucoDetector = cv2.aruco.ArucoDetector(arucoDict, arucoParam)
-
-    pipeline.start(config)
-    align = rs.align(rs.stream.color)
-
-    try:
-        while True:
-            frames = pipeline.wait_for_frames()
-
-            aligned_frames = align.process(frames)
-
-            depth_frame = aligned_frames.get_depth_frame()
-            color_frame = aligned_frames.get_color_frame()
-            
-            if not depth_frame or not color_frame:
-                continue
-
-            depth_image = np.asanyarray(depth_frame.get_data())
-            color_image = np.asanyarray(color_frame.get_data())
-
-            corners, ids, _ = arucoDetector.detectMarkers(color_image)
-            intrinsics = depth_frame.profile.as_video_stream_profile().get_intrinsics()
-
-            local_coordinates = {}
-            local_rotations = {}
-
-            if ids is not None:
-                for id, marker in zip(ids, corners):
-                    valid_coords = []
-                    
-                    for corner in marker[0]:
-                        x, y = corner
-                        depth = depth_frame.get_distance(int(x), int(y))
-                        
-                        if depth > 0:
-                            coord = rs.rs2_deproject_pixel_to_point(intrinsics, [x, y], depth)
-                            valid_coords.append(coord)
-                    
-                    if len(valid_coords) == 4:
-                        avg_coord = np.mean(valid_coords, axis=0)
-                        local_coordinates[int(id[0])] = avg_coord.tolist()
-                        
-
-                # update with thread safety
-                with lock:
-                    id_coordinates = local_coordinates.copy()
-
-                color_image = cv2.aruco.drawDetectedMarkers(color_image, corners, ids)
-            else:
-                # no markers detected - clear coordinates and rotations
-                with lock:
-                    id_coordinates = {}
-
-            depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.03), cv2.COLORMAP_JET)
-            images = np.hstack((color_image, depth_colormap))
-            cv2.imshow('RealSense', images)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-
-    finally:
-        pipeline.stop()
-        cv2.destroyAllWindows()
-
 def receive(sock):
     data = sock.recv(4096)
     data = data.decode('utf-8')
@@ -263,8 +220,9 @@ def send(sock, msg):
 
 if __name__ == "__main__":
     # start thread with socket code
-    t1 = threading.Thread(target=socket_client)
-    t1.start()
+    # t1 = threading.Thread(target=socket_client)
+    # t1.start()
+    socket_client()
 
     # realsense runs on the main thread
-    realsense_loop()
+    # realsense_loop()

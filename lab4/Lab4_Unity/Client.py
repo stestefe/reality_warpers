@@ -320,8 +320,9 @@ def send(sock, msg):
 
 if __name__ == "__main__":
     # start thread with socket code
-    t1 = threading.Thread(target=socket_client)
-    t1.start()
+    # t1 = threading.Thread(target=socket_client)
+    # t1.start()
 
+    socket_client()
     # realsense runs on the main thread
-    realsense_loop()
+    # realsense_loop()

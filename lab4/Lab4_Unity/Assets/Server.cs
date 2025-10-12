@@ -28,8 +28,8 @@ public class TCP : MonoBehaviour
     public Transform LHand;
     public Transform RHand;
     public Transform Head;
-    public Transform LFoot;
-    public Transform RFoot;
+    // public Transform LFoot;
+    // public Transform RFoot;
 
     public GameObject yBot;
 
@@ -124,7 +124,7 @@ public class TCP : MonoBehaviour
 
         if (Time.time > timer)
         {
-            SendAnchorsToClient();
+            // SendAnchorsToClient();
             timer = Time.time + 0.5f;
         }
 
@@ -164,17 +164,17 @@ public class TCP : MonoBehaviour
             position = RHand.transform.position,
         });
 
-        message.listOfAnchors.Add(new Anchor
-        {
-            id = bodyDict["leftFoot"],
-            position = LFoot.transform.position,
-        });
+        // message.listOfAnchors.Add(new Anchor
+        // {
+        //     id = bodyDict["leftFoot"],
+        //     position = LFoot.transform.position,
+        // });
 
-        message.listOfAnchors.Add(new Anchor
-        {
-            id = bodyDict["rightFoot"],
-            position = RFoot.transform.position,
-        });
+        // message.listOfAnchors.Add(new Anchor
+        // {
+        //     id = bodyDict["rightFoot"],
+        //     position = RFoot.transform.position,
+        // });
 
         SendMessageToClient(message);
     }
@@ -303,14 +303,14 @@ public class TCP : MonoBehaviour
                     rightHandPosition = RHand.position;
                     Debug.Log("Right Hand: " + RHand.position.ToString());
                     break;
-                case 3: // leftFoot
-                    LFoot.position = anchor.transformed_position;
-                    Debug.Log("Left Foot: " + LFoot.position.ToString());
-                    break;
-                case 4: // rightFoot
-                    RFoot.position = anchor.transformed_position;
-                    Debug.Log("Right Foot: " + RFoot.position.ToString());
-                    break;
+                // case 3: // leftFoot
+                //     LFoot.position = anchor.transformed_position;
+                //     Debug.Log("Left Foot: " + LFoot.position.ToString());
+                //     break;
+                // case 4: // rightFoot
+                //     RFoot.position = anchor.transformed_position;
+                //     Debug.Log("Right Foot: " + RFoot.position.ToString());
+                //     break;
             }
 
             if (leftHandPosition != Vector3.zero && rightHandPosition != Vector3.zero)
