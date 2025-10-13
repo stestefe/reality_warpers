@@ -143,6 +143,7 @@ public class TCP : MonoBehaviour
 
         if (Time.time > timer)
         {
+            // CALIBRATION PHASE
             SendAnchorsToClient();
             timer = Time.time + 0.5f;
         }
@@ -166,22 +167,31 @@ public class TCP : MonoBehaviour
         }
         Message message = new Message();
         
+        // head
         message.listOfAnchors.Add(new Anchor
         {
             id = bodyDict["head"],
             position = Head.transform.position,
         });
 
+        // leftHand
         message.listOfAnchors.Add(new Anchor
         {
             id = bodyDict["leftHand"],
             position = LHand.transform.position,
         });
 
+        // rightHand
         message.listOfAnchors.Add(new Anchor
         {
             id = bodyDict["rightHand"],
             position = RHand.transform.position,
+        });
+
+        message.listOfAnchors.Add(new Anchor
+        {
+            id = 3,
+            position = cart.transform.position
         });
 
         // message.listOfAnchors.Add(new Anchor
@@ -352,12 +362,15 @@ public class TCP : MonoBehaviour
 
     private void MoveCart(TransformedMessage transformedMessage)
     {
-        Debug.Log("HALLOOOOOOOOOOOOOO");
         foreach (TransformedAnchor arcuoMarker in transformedMessage.transformedArcuoAnchors)
         {
+            // skip for reload marker
+            if (arcuoMarker.anchor_id == 2)
+            {
+                continue;
+            }
+
             cart.transform.position = arcuoMarker.transformed_position;
-            Debug.Log("-------------------- Debug Log: Arcuo Positions --------------------");
-            Debug.Log(arcuoMarker.anchor_id + " " + arcuoMarker.transformed_position);
         }
         // TRACKING PHASE: Update marker positions
         // HashSet<int> seenMarkerIds = new HashSet<int>();

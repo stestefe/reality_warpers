@@ -81,7 +81,9 @@ def socket_client():
                 intrinsics = depth_frame.profile.as_video_stream_profile().get_intrinsics()
                 
                 skeleton_data = mp.skeleton(color_image, detection_results, depth_frame)
-                if skeleton_data is None:
+
+                # early exit
+                if (skeleton_data is None or ids is None):
                     cv2.namedWindow('RealSense', cv2.WINDOW_AUTOSIZE)
                     color_image = cv2.flip(color_image, 1)
                     cv2.imshow('RealSense', color_image)
@@ -89,7 +91,7 @@ def socket_client():
                     continue
 
                 skeleton_points = np.array([
-                    [skeleton_data['Head_x'], skeleton_data['Head_y'], skeleton_data['Head_z']],
+                    # [skeleton_data['Head_x'], skeleton_data['Head_y'], skeleton_data['Head_z']],
                     [skeleton_data['LHand_x'], skeleton_data['LHand_y'], skeleton_data['LHand_z']],
                     [skeleton_data['RHand_x'], skeleton_data['RHand_y'], skeleton_data['RHand_z']],
                     # [skeleton_data['LFoot_x'], skeleton_data['LFoot_y'], skeleton_data['LFoot_z']],
@@ -114,6 +116,12 @@ def socket_client():
                             avg_coordinates = np.mean(valid_coordinates, axis = 0)
                             # print("HELLOOOOOOOOOOOOOOOOOOOOOOOOOOO -------", id, avg_coordinates)
                             arcuo_coordinates[int(id[0])] = avg_coordinates
+                            
+                            # append arcuo marker to environment
+                            #skeleton_points.append([avg_coordinates[0], avg_coordinates[1], avg_coordinates[2]])
+                            print(avg_coordinates, "AHAHAHAHAHAHAHAHAHAHahaHAHHAHAHAHAH", flush = True)
+                            skeleton_points = np.append(skeleton_points, [avg_coordinates], axis=0)
+                            print(skeleton_points, "HIHIHIHIHIHIHIH", flush = True)
 
                     # color_image = cv2.aruco.drawDetectedMarkers(color_image, corners, ids)
                     # print("IDS", ids)
@@ -127,16 +135,19 @@ def socket_client():
                     anchors = msg['listOfAnchors']
                     
                     unity_points = np.array([
-                        [anchors[0]['position']['x'], anchors[0]['position']['y'], anchors[0]['position']['z']],  # head
+                        # [anchors[0]['position']['x'], anchors[0]['position']['y'], anchors[0]['position']['z']],  # head
                         [anchors[1]['position']['x'], anchors[1]['position']['y'], anchors[1]['position']['z']],  # left hand
-                        [anchors[2]['position']['x'], anchors[2]['position']['y'], anchors[2]['position']['z']]   # right hand
+                        [anchors[2]['position']['x'], anchors[2]['position']['y'], anchors[2]['position']['z']],   # right hand
+                        # 
+                        [anchors[3]['position']['x'], anchors[3]['position']['y'], anchors[3]['position']['z']]   # cart
                     ])
-                    
+                
                     print("Unity Anchor Points:", unity_points, flush=True)
 
 
                     # CALIBRATION PHASE
                     if T_matrix is None:
+                        # get the first three point (head, lHand, rHand) points from skeleton points
                         calibration_samples.append((skeleton_points.copy()[:3], unity_points.copy()))
                         print(f"calibration sample {len(calibration_samples)}/{CALIBRATION_SAMPLES_NEEDED}", flush=True)
                         
@@ -217,12 +228,14 @@ def socket_client():
                         }
                         print(f"Sending transformed positions:", response_msg, flush=True)
                         send(sock, response_msg)
+                        arcuo_coordinates = {}
                     else:
                         response_msg = {
                             'transformedSkeletonAnchors': [],
                             'transformedArcuoAnchors': []
                         }
                         send(sock, response_msg)
+                        arcuo_coordinates = {}
                     
                     time.sleep(0.05)
                     
