@@ -16,8 +16,9 @@ from scipy.spatial.transform import Rotation
 HOST = "127.0.0.1" # localhost
 PORT = 13456
 
-id_coordinates = {}
-lock = threading.Lock()
+
+# NOTE: Arcuo ID for -> Reload: 2
+# NOTE: Arcuo Id for -> Cart: 5, 5, 10, 50, 100, 125 
 
 def socket_client():
     mp = MediaPipe()
@@ -87,18 +88,16 @@ def socket_client():
                     cv2.waitKey(1)
                     continue
 
-                print("Hallo1", ids)
                 skeleton_points = np.array([
                     [skeleton_data['Head_x'], skeleton_data['Head_y'], skeleton_data['Head_z']],
                     [skeleton_data['LHand_x'], skeleton_data['LHand_y'], skeleton_data['LHand_z']],
                     [skeleton_data['RHand_x'], skeleton_data['RHand_y'], skeleton_data['RHand_z']],
-                    [skeleton_data['LFoot_x'], skeleton_data['LFoot_y'], skeleton_data['LFoot_z']],
-                    [skeleton_data['RFoot_x'], skeleton_data['RFoot_y'], skeleton_data['RFoot_z']]
+                    # [skeleton_data['LFoot_x'], skeleton_data['LFoot_y'], skeleton_data['LFoot_z']],
+                    # [skeleton_data['RFoot_x'], skeleton_data['RFoot_y'], skeleton_data['RFoot_z']]
                 ])
 
-                print("MediaPipe Skeleton:", skeleton_data, flush=True)
+                # print("MediaPipe Skeleton:", skeleton_data, flush=True)
                 
-                print(ids)
                 if ids is not None:
                     for id, marker in zip(ids,corners):
                         valid_coordinates = []
@@ -113,12 +112,15 @@ def socket_client():
                         
                         if len(valid_coordinates) == 4:
                             avg_coordinates = np.mean(valid_coordinates, axis = 0)
+                            # print("HELLOOOOOOOOOOOOOOOOOOOOOOOOOOO -------", id, avg_coordinates)
                             arcuo_coordinates[int(id[0])] = avg_coordinates
 
-                # color_image = cv2.aruco.drawDetectedMarkers(color_image, corners, ids)
-                    print("IDS", ids)
-                    print("Corners", corners)
+                    # color_image = cv2.aruco.drawDetectedMarkers(color_image, corners, ids)
+                    # print("IDS", ids)
+                    # print("Corners", corners)
                     cv2.aruco.drawDetectedMarkers(color_image, corners, ids)
+                else:
+                    arcuo_coordinates = {}
 
                 try:
                     msg = receive(sock)
@@ -132,14 +134,15 @@ def socket_client():
                     
                     print("Unity Anchor Points:", unity_points, flush=True)
 
+
                     # CALIBRATION PHASE
                     if T_matrix is None:
                         calibration_samples.append((skeleton_points.copy()[:3], unity_points.copy()))
                         print(f"calibration sample {len(calibration_samples)}/{CALIBRATION_SAMPLES_NEEDED}", flush=True)
                         
                         if len(calibration_samples) >= CALIBRATION_SAMPLES_NEEDED:
-                            all_skeleton = np.vstack([s for s, u in calibration_samples])
-                            all_unity = np.vstack([u for s, u in calibration_samples])
+                            all_skeleton = np.vstack([s for s, u in calibration_samples]) # CALIBRATION_SAMPLES_NEEDED X 4
+                            all_unity = np.vstack([u for s, u in calibration_samples]) # CALIBRATION_SAMPLES_NEEDED X 4
 
                             
                             skeleton_homogeneous = np.hstack([all_skeleton, np.ones((all_skeleton.shape[0], 1))])
@@ -154,8 +157,10 @@ def socket_client():
 
                     # TRACKING PHASE
                     if T_matrix is not None:
-                        transformed_anchors = []
+                        transformed_skeleton_anchors = []
+                        transformed_arcuo_anchors = []
                         
+                        # transform skeleton points
                         for index, skeleton_point in enumerate(skeleton_points):
                             homogenous_skeleton_point = np.array([
                                 skeleton_point[0], 
@@ -166,7 +171,7 @@ def socket_client():
                             
                             transformed_point = (T_matrix @ homogenous_skeleton_point)[:3]
                             
-                            transformed_anchor = {
+                            transformed_skeleton_anchor = {
                                 'anchor_id': index,
                                 'original_position': {
                                     'x': float(skeleton_point[0]),
@@ -179,13 +184,44 @@ def socket_client():
                                     'z': float(transformed_point[2]),
                                 }
                             }
-                            transformed_anchors.append(transformed_anchor)
+                            transformed_skeleton_anchors.append(transformed_skeleton_anchor)
                         
-                        response_msg = {'transformedAnchors': transformed_anchors}
+                        # transform skeleton points
+                        if arcuo_coordinates:
+                            for marker_id, marker_pos in arcuo_coordinates.items():
+
+                                marker_point = np.array([marker_pos[0], marker_pos[1], marker_pos[2], 1.0])
+                                transformed_point = (T_matrix @ marker_point)[:3]
+
+                                transformed_arcuo_anchor ={
+                                    'anchor_id': marker_id,
+                                    'original_position': {
+                                        'x': float(marker_pos[0]),
+                                        'y': float(marker_pos[1]),
+                                        'z': float(marker_pos[2])
+                                    },
+                                    'transformed_position': {
+                                        'x': float(transformed_point[0]),
+                                        'y': float(transformed_point[1]),
+                                        'z': float(transformed_point[2])
+                                    }
+                                }
+
+                                transformed_arcuo_anchors.append(transformed_arcuo_anchor)
+
+
+                        # assemble message type
+                        response_msg = {
+                            'transformedSkeletonAnchors': transformed_skeleton_anchors,
+                            'transformedArcuoAnchors': transformed_arcuo_anchors # transformed_arcuo_anchors
+                        }
                         print(f"Sending transformed positions:", response_msg, flush=True)
                         send(sock, response_msg)
                     else:
-                        response_msg = {'transformedAnchors': []}
+                        response_msg = {
+                            'transformedSkeletonAnchors': [],
+                            'transformedArcuoAnchors': []
+                        }
                         send(sock, response_msg)
                     
                     time.sleep(0.05)
@@ -210,7 +246,7 @@ def receive(sock):
     data = sock.recv(4096)
     data = data.decode('utf-8')
     msg = json.loads(data)
-    print("Received:", msg, flush=True)
+    # print("Received:", msg, flush=True)
     return msg
 
 def send(sock, msg):

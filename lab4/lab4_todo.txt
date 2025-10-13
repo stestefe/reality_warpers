@@ -1,0 +1,15 @@
+finished:
+- run the mediapipe and arcuo marker detection simutaniously
+- mirror user movement
+- mirror cart movement and user movement
+
+todo:
+- movement cart object according to markers
+-> need coordinates of ids
+
+
+
+CONTROL FLOW:
+if id 2 is visible
+	then send it in the message but let the server manage it by looping through the array
+

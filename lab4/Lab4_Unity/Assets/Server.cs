@@ -42,6 +42,8 @@ public class TCP : MonoBehaviour
 
     public RigBuilder rigBuilder;
 
+    public GameObject cart;
+
     public Dictionary<string, int> bodyDict = new Dictionary<string, int>{
         { "head", 0 },
         { "leftHand", 1 },
@@ -66,7 +68,8 @@ public class TCP : MonoBehaviour
     [Serializable]
     public class TransformedMessage
     {
-        public List<TransformedAnchor> transformedAnchors = new List<TransformedAnchor>();
+        public List<TransformedAnchor> transformedSkeletonAnchors = new List<TransformedAnchor>();
+        public List<TransformedAnchor> transformedArcuoAnchors = new List<TransformedAnchor>();
     }
 
     [Serializable]
@@ -76,6 +79,22 @@ public class TCP : MonoBehaviour
         public Vector3 original_position;
         public Vector3 transformed_position;
     }
+
+     [Serializable]
+    public class MarkerData
+    {
+        public int id;
+        public int lastSeenInMessage;
+        public GameObject markerObject;
+        public MarkerData(int id, int lastSeenInMessage, GameObject markerObject)
+        {
+            this.id = id;
+            this.lastSeenInMessage = lastSeenInMessage;
+            this.markerObject = markerObject;
+        }
+    }
+
+    private Dictionary<int, MarkerData> activeMarkers = new Dictionary<int, MarkerData>();
 
     private float timer = 0;
     private static object Lock = new object();
@@ -124,7 +143,7 @@ public class TCP : MonoBehaviour
 
         if (Time.time > timer)
         {
-            // SendAnchorsToClient();
+            SendAnchorsToClient();
             timer = Time.time + 0.5f;
         }
 
@@ -132,7 +151,8 @@ public class TCP : MonoBehaviour
         {
             foreach (TransformedMessage msg in MessageQue)
             {
-                Move(msg);
+                MoveMediapipe(msg);
+                MoveCart(msg);
             }
             MessageQue.Clear();
         }
@@ -279,54 +299,116 @@ public class TCP : MonoBehaviour
         }
     }
 
-    public void Move(TransformedMessage message)
+    public void MoveMediapipe(TransformedMessage message)
     {
-        float DISTANCE_THRESHHOLD = 1f;
-        Vector3 leftHandPosition = Vector3.zero;
-        Vector3 rightHandPosition = Vector3.zero;
+        // float DISTANCE_THRESHHOLD = 1f;
+        // Vector3 leftHandPosition = Vector3.zero;
+        // Vector3 rightHandPosition = Vector3.zero;
 
-        foreach (TransformedAnchor anchor in message.transformedAnchors)
+        foreach (TransformedAnchor skeletonAnchor in message.transformedSkeletonAnchors)
         {
-            switch (anchor.anchor_id)
+            switch (skeletonAnchor.anchor_id)
             {
                 case 0: // head
-                    Head.position = anchor.transformed_position;
+                    Head.position = skeletonAnchor.transformed_position;
                     Debug.Log("Head: " + Head.position.ToString());
                     break;
                 case 1: // leftHand
-                    LHand.position = anchor.transformed_position;
-                    leftHandPosition = LHand.position;
+                    LHand.position = skeletonAnchor.transformed_position;
+                    // leftHandPosition = LHand.position;
                     Debug.Log("Left Hand: " + LHand.position.ToString());
                     break;
                 case 2: // rightHand
-                    RHand.position = anchor.transformed_position;
-                    rightHandPosition = RHand.position;
+                    RHand.position = skeletonAnchor.transformed_position;
+                    // rightHandPosition = RHand.position;
                     Debug.Log("Right Hand: " + RHand.position.ToString());
                     break;
-                // case 3: // leftFoot
-                //     LFoot.position = anchor.transformed_position;
-                //     Debug.Log("Left Foot: " + LFoot.position.ToString());
-                //     break;
-                // case 4: // rightFoot
-                //     RFoot.position = anchor.transformed_position;
-                //     Debug.Log("Right Foot: " + RFoot.position.ToString());
-                //     break;
+                    // case 3: // leftFoot
+                    //     LFoot.position = skeletonAnchor.transformed_position;
+                    //     Debug.Log("Left Foot: " + LFoot.position.ToString());
+                    //     break;
+                    // case 4: // rightFoot
+                    //     RFoot.position = skeletonAnchor.transformed_position;
+                    //     Debug.Log("Right Foot: " + RFoot.position.ToString());
+                    //     break;
             }
 
-            if (leftHandPosition != Vector3.zero && rightHandPosition != Vector3.zero)
-            {
-                float dist = Vector3.Distance(leftHandPosition, rightHandPosition);
-                Debug.Log("---------- THIS IS MY DISTANCE ------------" + dist);
-                if (dist <= DISTANCE_THRESHHOLD)
-                {
-                    Debug.Log("---------- I AM JUMPINGGGGGGGGG ------------" + dist);
-                    boneRenderer.enabled = false;
-                    rigBuilder.enabled = false;
-                    VrRig.SetActive(false);
-                    playerAnimation.SetBool("JumpingJack", true);
-                    currentlyJumpingJack = true;
-                }
-            }
+            // if (leftHandPosition != Vector3.zero && rightHandPosition != Vector3.zero)
+            // {
+            //     float dist = Vector3.Distance(leftHandPosition, rightHandPosition);
+            //     Debug.Log("---------- THIS IS MY DISTANCE ------------" + dist);
+            //     if (dist <= DISTANCE_THRESHHOLD)
+            //     {
+            //         Debug.Log("---------- I AM JUMPINGGGGGGGGG ------------" + dist);
+            //         boneRenderer.enabled = false;
+            //         rigBuilder.enabled = false;
+            //         VrRig.SetActive(false);
+            //         playerAnimation.SetBool("JumpingJack", true);
+            //         currentlyJumpingJack = true;
+            //     }
+            // }
         }
     }
+
+    private void MoveCart(TransformedMessage transformedMessage)
+    {
+        Debug.Log("HALLOOOOOOOOOOOOOO");
+        foreach (TransformedAnchor arcuoMarker in transformedMessage.transformedArcuoAnchors)
+        {
+            cart.transform.position = arcuoMarker.transformed_position;
+            Debug.Log("-------------------- Debug Log: Arcuo Positions --------------------");
+            Debug.Log(arcuoMarker.anchor_id + " " + arcuoMarker.transformed_position);
+        }
+        // TRACKING PHASE: Update marker positions
+        // HashSet<int> seenMarkerIds = new HashSet<int>();
+
+        // foreach (var transformedAnchor in transformedMessage.transformedSkeletonAnchors)
+        // {
+        //     int markerId = transformedAnchor.anchor_id;
+        //     seenMarkerIds.Add(markerId);
+
+        //     Debug.Log($"RECEIVED: Marker ID {markerId} at {transformedAnchor.transformed_position}");
+
+        //     if (activeMarkers.ContainsKey(markerId))
+        //     {
+        //         // update existing marker
+        //         MarkerData markerData = activeMarkers[markerId];
+
+        //         if (markerData.markerObject != null)
+        //         {
+        //             markerData.markerObject.transform.position = transformedAnchor.transformed_position;
+        //             markerData.lastSeenInMessage = messageCounter;
+        //             Debug.Log($"Updated marker {markerId} position");
+        //         }
+        //         else
+        //         {
+        //             // object was destroyed, recreate it
+        //             Debug.Log($"Recreating marker {markerId}");
+        //             GameObject newMarker = Instantiate(greenObject, transformedAnchor.transformed_position, Quaternion.identity);
+        //             markerData.markerObject = newMarker;
+        //             markerData.lastSeenInMessage = messageCounter;
+        //         }
+        //     }
+        //     else
+        //     {
+        //         // create new marker
+        //         Debug.Log($"Creating new marker {markerId}");
+        //         Vector3 markerPosition = transformedAnchor.transformed_position;
+        //         GameObject currentGreenObject = Instantiate(greenObject, markerPosition, Quaternion.identity);
+        //         MarkerData currentMarkerData = new MarkerData(markerId, messageCounter, currentGreenObject);
+        //         activeMarkers[markerId] = currentMarkerData;
+        //     }
+        // }
+
+        // // update lastSeenInMessage for markers that weren't in this message
+        // foreach (var kvp in activeMarkers)
+        // {
+        //     if (!seenMarkerIds.Contains(kvp.Key))
+        //     {
+        //         Debug.Log($"Marker {kvp.Key} not seen in this message (last seen: {kvp.Value.lastSeenInMessage}, current: {messageCounter})");
+        //     }
+        // }
+    }
+    
+    private void checkReload(){}
 }
