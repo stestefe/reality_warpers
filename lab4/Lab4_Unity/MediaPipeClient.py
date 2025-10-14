@@ -20,6 +20,8 @@ PORT = 13456
 # NOTE: Arcuo ID for -> Reload: 2
 # NOTE: Arcuo Id for -> Cart: 5, 5, 10, 50, 100, 125 
 
+# TODO: edge case check only one has to be running either mediapipe or arcuo markers
+
 def socket_client():
     mp = MediaPipe()
     

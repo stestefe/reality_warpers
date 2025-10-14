@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Net;
 using System.Net.Sockets;
+using System.Linq;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.Animations.Rigging;
@@ -43,6 +44,8 @@ public class TCP : MonoBehaviour
     public RigBuilder rigBuilder;
 
     public GameObject cart;
+
+    private bool returnBasketState;
 
     public Dictionary<string, int> bodyDict = new Dictionary<string, int>{
         { "head", 0 },
@@ -85,20 +88,23 @@ public class TCP : MonoBehaviour
     {
         public int id;
         public int lastSeenInMessage;
-        public GameObject markerObject;
-        public MarkerData(int id, int lastSeenInMessage, GameObject markerObject)
+        public MarkerData(int id, int lastSeenInMessage)
         {
             this.id = id;
             this.lastSeenInMessage = lastSeenInMessage;
-            this.markerObject = markerObject;
         }
     }
 
-    private Dictionary<int, MarkerData> activeMarkers = new Dictionary<int, MarkerData>();
 
     private float timer = 0;
     private static object Lock = new object();
     private List<TransformedMessage> MessageQue = new List<TransformedMessage>();
+
+    private Dictionary<int, MarkerData> activeMarkers = new Dictionary<int, MarkerData>();
+
+    const int MISSING_THRESHOLD = 5;
+
+    private int messageCounter = 0;
 
     private void Start()
     {
@@ -150,13 +156,19 @@ public class TCP : MonoBehaviour
 
         lock (Lock)
         {
+            messageCounter++;
             foreach (TransformedMessage msg in MessageQue)
             {
-                MoveMediapipe(msg);
                 MoveCart(msg);
+                if (returnBasketState == true)
+                {
+                    MoveMediapipe(msg);
+                }
+
             }
             MessageQue.Clear();
         }
+        CleanupInactiveIdMarkers();
     }
 
     private void SendAnchorsToClient()
@@ -166,7 +178,7 @@ public class TCP : MonoBehaviour
             return;
         }
         Message message = new Message();
-        
+
         // head
         // message.listOfAnchors.Add(new Anchor
         // {
@@ -311,9 +323,7 @@ public class TCP : MonoBehaviour
 
     public void MoveMediapipe(TransformedMessage message)
     {
-        // float DISTANCE_THRESHHOLD = 1f;
-        // Vector3 leftHandPosition = Vector3.zero;
-        // Vector3 rightHandPosition = Vector3.zero;
+
 
         foreach (TransformedAnchor skeletonAnchor in message.transformedSkeletonAnchors)
         {
@@ -343,20 +353,12 @@ public class TCP : MonoBehaviour
                     //     break;
             }
 
-            // if (leftHandPosition != Vector3.zero && rightHandPosition != Vector3.zero)
-            // {
-            //     float dist = Vector3.Distance(leftHandPosition, rightHandPosition);
-            //     Debug.Log("---------- THIS IS MY DISTANCE ------------" + dist);
-            //     if (dist <= DISTANCE_THRESHHOLD)
-            //     {
             //         Debug.Log("---------- I AM JUMPINGGGGGGGGG ------------" + dist);
             //         boneRenderer.enabled = false;
             //         rigBuilder.enabled = false;
             //         VrRig.SetActive(false);
             //         playerAnimation.SetBool("JumpingJack", true);
             //         currentlyJumpingJack = true;
-            //     }
-            // }
         }
     }
 
@@ -373,56 +375,140 @@ public class TCP : MonoBehaviour
             newPosition.y = 0;
             cart.transform.position = arcuoMarker.transformed_position;
         }
-        // TRACKING PHASE: Update marker positions
-        // HashSet<int> seenMarkerIds = new HashSet<int>();
 
-        // foreach (var transformedAnchor in transformedMessage.transformedSkeletonAnchors)
-        // {
-        //     int markerId = transformedAnchor.anchor_id;
-        //     seenMarkerIds.Add(markerId);
+        HashSet<int> seenMarkerIds = new HashSet<int>();
 
-        //     Debug.Log($"RECEIVED: Marker ID {markerId} at {transformedAnchor.transformed_position}");
+        foreach (var transformedAnchor in transformedMessage.transformedArcuoAnchors)
+        {
+            int markerId = transformedAnchor.anchor_id;
+            seenMarkerIds.Add(markerId);
 
-        //     if (activeMarkers.ContainsKey(markerId))
-        //     {
-        //         // update existing marker
-        //         MarkerData markerData = activeMarkers[markerId];
+            //  This ID is still active -> meaning that we did not gracefully delete it yet
+            if (activeMarkers.ContainsKey(markerId))
+            {
+                // update existing marker
+                MarkerData markerData = activeMarkers[markerId];
 
-        //         if (markerData.markerObject != null)
-        //         {
-        //             markerData.markerObject.transform.position = transformedAnchor.transformed_position;
-        //             markerData.lastSeenInMessage = messageCounter;
-        //             Debug.Log($"Updated marker {markerId} position");
-        //         }
-        //         else
-        //         {
-        //             // object was destroyed, recreate it
-        //             Debug.Log($"Recreating marker {markerId}");
-        //             GameObject newMarker = Instantiate(greenObject, transformedAnchor.transformed_position, Quaternion.identity);
-        //             markerData.markerObject = newMarker;
-        //             markerData.lastSeenInMessage = messageCounter;
-        //         }
-        //     }
-        //     else
-        //     {
-        //         // create new marker
-        //         Debug.Log($"Creating new marker {markerId}");
-        //         Vector3 markerPosition = transformedAnchor.transformed_position;
-        //         GameObject currentGreenObject = Instantiate(greenObject, markerPosition, Quaternion.identity);
-        //         MarkerData currentMarkerData = new MarkerData(markerId, messageCounter, currentGreenObject);
-        //         activeMarkers[markerId] = currentMarkerData;
-        //     }
-        // }
+                if (markerData != null)
+                {
+                    // markerData.markerObject.transform.position = transformedAnchor.transformed_position;
+                    markerData.lastSeenInMessage = messageCounter;
+                    Debug.Log($"updated marker {markerId} lastSeenInMessage");
+                }
+            }
+            else // This MarkerData was not in the dict -> so it did not exist beforehand or it was deleted once. so we add it again
+            {
+                // Debug.Log($"creating new marker {markerId}");
+                if(markerId == 2)
+                {
+                    returnBasketState = true;
+                    ToggleFlowerSearch();
+                    ToggleMediapipeTracking();
+                    Debug.Log("IN BASKET MODE RIGHT NOW");
+                }
+                MarkerData currentMarkerData = new MarkerData(markerId, messageCounter);
+                activeMarkers[markerId] = currentMarkerData;
+                
+            }
+        }
 
-        // // update lastSeenInMessage for markers that weren't in this message
-        // foreach (var kvp in activeMarkers)
-        // {
-        //     if (!seenMarkerIds.Contains(kvp.Key))
-        //     {
-        //         Debug.Log($"Marker {kvp.Key} not seen in this message (last seen: {kvp.Value.lastSeenInMessage}, current: {messageCounter})");
-        //     }
-        // }
+        // update lastSeenInMessage for markers that weren't in this message
+        foreach (var kvp in activeMarkers)
+        {
+            if (!seenMarkerIds.Contains(kvp.Key))
+            {
+                Debug.Log($"Marker {kvp.Key} not seen in this message (last seen: {kvp.Value.lastSeenInMessage}, current: {messageCounter})");
+            }
+        }
     }
-    
-    private void checkReload(){}
+
+    private void CleanupInactiveIdMarkers()
+    {
+        List<int> markersToRemove = new List<int>();
+
+        foreach (var kvp in activeMarkers)
+        {
+            int markerId = kvp.Key;
+            MarkerData markerData = kvp.Value;
+
+            int messagesSinceLastSeen = messageCounter - markerData.lastSeenInMessage;
+            Debug.Log($"IN DEBUG LOG RIGHT NOW: {markerId}, {markerData.lastSeenInMessage}");
+            if (messagesSinceLastSeen >= MISSING_THRESHOLD)
+            {
+                if(markerId == 2)
+                {
+                    returnBasketState = false;
+                    ToggleFlowerSearch();
+                    ToggleMediapipeTracking();
+                    Debug.Log("NOT IN BASKET MODE ANYMORE");
+                // Debug.Log($"marker {markerId} missing for {messagesSinceLastSeen} messages. Switched mode");
+                }
+                markersToRemove.Add(markerId);
+            }
+        }
+
+        foreach (var markerId in markersToRemove)
+        {
+            activeMarkers.Remove(markerId);
+        }
+    }
+
+
+
+
+    private void ToggleMediapipeTracking()
+    {
+        if (returnBasketState)
+        {
+
+            boneRenderer.enabled = true;
+            rigBuilder.enabled = true;
+            VrRig.SetActive(true);
+            // playerAnimation.SetBool("JumpingJack", true);
+            // currentlyJumpingJack = true;
+            return;
+        }
+        boneRenderer.enabled = false;
+        rigBuilder.enabled = false;
+        VrRig.SetActive(false);
+        // playerAnimation.SetBo
+    }
+
+    private void ToggleFlowerSearch()
+    {
+        // String targetName = "Hydrangea_Collider(Clone)";
+        // Transform[] allObjects = FindObjectsOfType<Transform>();
+        // var matchingObjects = allObjects
+        //     .Where(obj => obj.name == targetName)
+        //     .Select(obj => obj.gameObject)
+        //     .ToList();
+
+        // foreach (var obj in matchingObjects)
+        // {
+        //     if (returnBasketState == true)
+        //     {
+        //         obj.SetActive(false);
+        //         continue;
+        //     }
+        //     obj.SetActive(true);
+        // }
+        GameObject spawner = GameObject.FindObjectOfType<SpawnGameObject>()?.gameObject;
+        if (returnBasketState == true)
+        {
+
+            Debug.Log("Deactivate Flowers");
+            if (spawner != null)
+            {
+                spawner.GetComponent<SpawnGameObject>().DeactivateFlowers();
+            }
+            return;
+        }
+
+        if (spawner != null)
+        {   
+            Debug.Log("Activate Flowers");
+            spawner.GetComponent<SpawnGameObject>().ActivateFlowers();
+        }
+    }
+
 }

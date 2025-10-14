@@ -40,5 +40,21 @@ public class SpawnGameObject : MonoBehaviour
     {
         spawnedObjects.Remove(obj);
     }
+
+    public void DeactivateFlowers()
+    {
+        foreach (GameObject flower in spawnedObjects)
+        {
+            flower.SetActive(false);
+        }
+    }
+    
+    public void ActivateFlowers()
+    {
+        foreach(GameObject flower in spawnedObjects)
+        {
+            flower.SetActive(true);
+        }
+    }
 }
 
