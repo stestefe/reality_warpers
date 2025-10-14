@@ -168,11 +168,11 @@ public class TCP : MonoBehaviour
         Message message = new Message();
         
         // head
-        message.listOfAnchors.Add(new Anchor
-        {
-            id = bodyDict["head"],
-            position = Head.transform.position,
-        });
+        // message.listOfAnchors.Add(new Anchor
+        // {
+        //     id = bodyDict["head"],
+        //     position = Head.transform.position,
+        // });
 
         // leftHand
         message.listOfAnchors.Add(new Anchor
@@ -319,16 +319,16 @@ public class TCP : MonoBehaviour
         {
             switch (skeletonAnchor.anchor_id)
             {
-                case 0: // head
-                    Head.position = skeletonAnchor.transformed_position;
-                    Debug.Log("Head: " + Head.position.ToString());
-                    break;
-                case 1: // leftHand
+                // case 0: // head
+                //     Head.position = skeletonAnchor.transformed_position;
+                //     Debug.Log("Head: " + Head.position.ToString());
+                //     break;
+                case 0: // leftHand
                     LHand.position = skeletonAnchor.transformed_position;
                     // leftHandPosition = LHand.position;
                     Debug.Log("Left Hand: " + LHand.position.ToString());
                     break;
-                case 2: // rightHand
+                case 1: // rightHand
                     RHand.position = skeletonAnchor.transformed_position;
                     // rightHandPosition = RHand.position;
                     Debug.Log("Right Hand: " + RHand.position.ToString());
@@ -369,7 +369,8 @@ public class TCP : MonoBehaviour
             {
                 continue;
             }
-
+            Vector3 newPosition = arcuoMarker.transformed_position;
+            newPosition.y = 0;
             cart.transform.position = arcuoMarker.transformed_position;
         }
         // TRACKING PHASE: Update marker positions

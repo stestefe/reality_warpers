@@ -6,8 +6,8 @@ public class SpawnGameObject : MonoBehaviour
 {
     public GameObject gameObject1Prefab;
     public int maxObjects = 10;
-    public Vector2 planeSize = new Vector2(10f, 10f);
-    public float padding = 1f;
+    public Vector2 planeSize = new Vector2(5f, 5f);
+    // public float padding = 1f;
     public List<GameObject> spawnedObjects = new List<GameObject>();
 
     void Start()
@@ -20,8 +20,8 @@ public class SpawnGameObject : MonoBehaviour
         if (spawnedObjects.Count >= maxObjects)
             return;
 
-        float halfX = planeSize.x / 2f - padding;
-        float halfZ = planeSize.y / 2f - padding;
+        float halfX = planeSize.x / 2f; // - padding;
+        float halfZ = planeSize.y / 2f; //- padding;
 
         if (halfX <= 0 || halfZ <= 0)
         {

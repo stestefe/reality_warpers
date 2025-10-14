@@ -119,9 +119,7 @@ def socket_client():
                             
                             # append arcuo marker to environment
                             #skeleton_points.append([avg_coordinates[0], avg_coordinates[1], avg_coordinates[2]])
-                            print(avg_coordinates, "AHAHAHAHAHAHAHAHAHAHahaHAHHAHAHAHAH", flush = True)
                             skeleton_points = np.append(skeleton_points, [avg_coordinates], axis=0)
-                            print(skeleton_points, "HIHIHIHIHIHIHIH", flush = True)
 
                     # color_image = cv2.aruco.drawDetectedMarkers(color_image, corners, ids)
                     # print("IDS", ids)
@@ -136,10 +134,10 @@ def socket_client():
                     
                     unity_points = np.array([
                         # [anchors[0]['position']['x'], anchors[0]['position']['y'], anchors[0]['position']['z']],  # head
-                        [anchors[1]['position']['x'], anchors[1]['position']['y'], anchors[1]['position']['z']],  # left hand
-                        [anchors[2]['position']['x'], anchors[2]['position']['y'], anchors[2]['position']['z']],   # right hand
+                        [anchors[0]['position']['x'], anchors[0]['position']['y'], anchors[0]['position']['z']],  # left hand
+                        [anchors[1]['position']['x'], anchors[1]['position']['y'], anchors[1]['position']['z']],   # right hand
                         # 
-                        [anchors[3]['position']['x'], anchors[3]['position']['y'], anchors[3]['position']['z']]   # cart
+                        [anchors[2]['position']['x'], anchors[2]['position']['y'], anchors[2]['position']['z']]   # cart
                     ])
                 
                     print("Unity Anchor Points:", unity_points, flush=True)

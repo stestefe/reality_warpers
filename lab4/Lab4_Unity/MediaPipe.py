@@ -67,12 +67,12 @@ class MediaPipe:
         if results.pose_landmarks is None:
             return None
         
-        head3D = self.point_to_3D(
-            results.pose_landmarks.landmark[self.mp_holistic.PoseLandmark.NOSE],
-            image, depth_frame)
-        if head3D is None:
-            return None
-        Head_x, Head_y, Head_z = head3D
+        # head3D = self.point_to_3D(
+        #     results.pose_landmarks.landmark[self.mp_holistic.PoseLandmark.NOSE],
+        #     image, depth_frame)
+        # if head3D is None:
+        #     return None
+        # Head_x, Head_y, Head_z = head3D
         
         rWrist3D = self.point_to_3D(
             results.pose_landmarks.landmark[self.mp_holistic.PoseLandmark.RIGHT_WRIST],
@@ -103,7 +103,7 @@ class MediaPipe:
         # RFoot_x, RFoot_y, RFoot_z = rFoot3D
         
         msg = {
-            'Head_x': Head_x, 'Head_y': Head_y, 'Head_z': Head_z,
+            # 'Head_x': Head_x, 'Head_y': Head_y, 'Head_z': Head_z,
             'LHand_x': LHand_x, 'LHand_y': LHand_y, 'LHand_z': LHand_z,
             'RHand_x': RHand_x, 'RHand_y': RHand_y, 'RHand_z': RHand_z,
             # 'LFoot_x': LFoot_x, 'LFoot_y': LFoot_y, 'LFoot_z': LFoot_z,

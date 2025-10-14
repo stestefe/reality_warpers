@@ -271,8 +271,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameObject1Prefab: {fileID: 1682593054194990011, guid: 207d8e302661fd94f96d7de892e34ec7, type: 3}
   maxObjects: 10
-  planeSize: {x: 10, y: 10}
-  padding: 1
+  planeSize: {x: 4, y: 4}
   spawnedObjects: []
 --- !u!54 &38304943
 Rigidbody:
