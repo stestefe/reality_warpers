@@ -30,7 +30,7 @@ public class SpawnGameObject : MonoBehaviour
 
         float x = Random.Range(-halfX, halfX);
         float z = Random.Range(-halfZ, halfZ);
-        Vector3 spawnPos = new Vector3(x, 0.5f, z);
+        Vector3 spawnPos = new Vector3(x, 0f, z);
 
         GameObject obj = Instantiate(gameObject1Prefab, spawnPos, Quaternion.identity);
         spawnedObjects.Add(obj);
