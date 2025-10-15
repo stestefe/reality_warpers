@@ -2,36 +2,43 @@ finished:
 - running the mediapipe and arcuo marker detection simultaneously
 - mirror users movement
 - added environment
-- added vfx effect
+- added vfx effect -> bonus 0: particle effect
 - added sound effect
 -  added toggle instruction text
+- movement cart object according to markers
+-  animation default for character
+-  added smoothing but decided to remove that again. because it introduces lag to the movement
+- adding method with grace period for detecting marker 2
+- add 3 rounds logic (done for script)
+- 
+
+- control flow:
+client sends message to server including the id 2 -> server switches mode to DISABLE THE FLOWERS 
+when id is not in the message anymore run the graceperiod method to check if its actually gone and then change to mode again and TURN ON FLOWERS
 
 
 todo:
-- movement cart object according to markers
--> need coordinates of ids
-- animation default for character
+- bee tracking bonus
+- add foot tracking for bonus
+
+- bee tracking bonus
+
+- add 3 rounds logic
+
 
 
 CONTROL FLOW:
-- if id 2 is visible
-	then send it in the message but let the server manage it by looping through the array
-	switch to mode and deactive tracking of the mediapipe
 - add 3 rounds logic
-- - adding method with grace period for detecting marker 2
+- adding method with grace period for detecting marker 2
 
 
-bonus 0: particle effect,  
+
 bonus lab 1: ball tracking with yolo -> object recognition
 bonus lab 2: grace period for different object and smoothing 
 bonus lab 3: idle animation and legs tracking
 
 
-control flow:
-client sends message to server including the id 2 -> server switches mode to DISABLE THE FLOWERS 
-when id is not in the message anymore run the graceperiod method to check if its actually gone and then change to mode again and TURN ON FLOWERS
-
-
 new bonus idea:
 - new state bonus is detecting balls. if balls is detected then count points
+- bee idea
 

@@ -1,5 +1,7 @@
 # LAB3
 
+# from ultralytics import YOLOvv11
+
 import socket
 import json
 import cv2
@@ -52,6 +54,8 @@ def socket_client():
     pipeline.start(config)
     align_to = rs.stream.color
     align = rs.align(align_to)
+
+    # model = YOLOvv11.from_pretrained("leeyunjai/yolo11-balldetect")
 
     T_matrix = None
     calibration_samples = []

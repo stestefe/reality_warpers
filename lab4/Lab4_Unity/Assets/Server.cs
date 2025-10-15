@@ -122,30 +122,40 @@ public class TCP : MonoBehaviour
 
     private void Update()
     {
-        if (currentlyJumpingJack)
-        {
-            jumpingTimer += Time.deltaTime;
-            if (jumpingTimer > waitTime)
-            {
-                playerAnimation.SetBool("JumpingJack", false);
-                boneRenderer.enabled = true;
-                rigBuilder.enabled = true;
-                VrRig.SetActive(true);
-                jumpingTimer = 0.0f;
-                currentlyJumpingJack = false;
-            }
-        }
 
-        // TODO
         if (Input.GetKeyDown(KeyCode.Q))
         {
             Debug.Log("--------------------- PRESS KEY Q----------------------");
             boneRenderer.enabled = false;
             rigBuilder.enabled = false;
             VrRig.SetActive(false);
-            playerAnimation.SetBool("JumpingJack", true);
-            currentlyJumpingJack = true;
+            playerAnimation.SetBool("Breakdancing", true);
         }
+
+        // if (currentlyJumpingJack)
+        // {
+        //     jumpingTimer += Time.deltaTime;
+        //     if (jumpingTimer > waitTime)
+        //     {
+        //         playerAnimation.SetBool("JumpingJack", false);
+        //         boneRenderer.enabled = true;
+        //         rigBuilder.enabled = true;
+        //         VrRig.SetActive(true);
+        //         jumpingTimer = 0.0f;
+        //         currentlyJumpingJack = false;
+        //     }
+        // }
+
+        // TODO
+        // if (Input.GetKeyDown(KeyCode.Q))
+        // {
+        //     Debug.Log("--------------------- PRESS KEY Q----------------------");
+        //     boneRenderer.enabled = false;
+        //     rigBuilder.enabled = false;
+        //     VrRig.SetActive(false);
+        //     playerAnimation.SetBool("JumpingJack", true);
+        //     currentlyJumpingJack = true;
+        // }
 
         if (Time.time > timer)
         {
@@ -160,6 +170,7 @@ public class TCP : MonoBehaviour
             {
                 messageCounter++;
                 MoveCart(msg);
+                // playerAnimation.SetBool("Breakdancing", true);
                 if (returnBasketState == true)
                 {
                     MoveMediapipe(msg);
@@ -475,9 +486,11 @@ public class TCP : MonoBehaviour
         if (returnBasketState)
         {
             yBotText.text = "PLEASE RETURN TO ME! I NEED THE FLOWERS RIGHT NOW!!";
+            playerAnimation.SetBool("Breakdancing", false);
             return;
         }
         yBotText.text = "Collect flowers for me! pleasee <3";
+        playerAnimation.SetBool("Breakdancing", true);
     }
 
     private void ToggleFlowerSearch()
