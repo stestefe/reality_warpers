@@ -33,10 +33,6 @@ public class TCP : MonoBehaviour
     // public Transform RFoot;
 
     public GameObject yBot;
-
-    // public GameObject boneRenderer;
-
-    // public GameObject RigBuilder;
     public GameObject VrRig;
 
     public BoneRenderer boneRenderer;
@@ -83,7 +79,7 @@ public class TCP : MonoBehaviour
         public Vector3 transformed_position;
     }
 
-     [Serializable]
+    [Serializable]
     public class MarkerData
     {
         public int id;
@@ -156,9 +152,9 @@ public class TCP : MonoBehaviour
 
         lock (Lock)
         {
-            messageCounter++;
             foreach (TransformedMessage msg in MessageQue)
             {
+                messageCounter++;
                 MoveCart(msg);
                 if (returnBasketState == true)
                 {
@@ -247,7 +243,7 @@ public class TCP : MonoBehaviour
                     data = Encoding.UTF8.GetString(buffer, 0, i);
                     TransformedMessage message = DecodeTransformed(data);
                     Debug.Log(message.ToString());
-                    
+
                     if (message != null)
                     {
                         lock (Lock)
@@ -364,51 +360,42 @@ public class TCP : MonoBehaviour
 
     private void MoveCart(TransformedMessage transformedMessage)
     {
-        foreach (TransformedAnchor arcuoMarker in transformedMessage.transformedArcuoAnchors)
-        {
-            // skip for reload marker
-            if (arcuoMarker.anchor_id == 2)
-            {
-                continue;
-            }
-            Vector3 newPosition = arcuoMarker.transformed_position;
-            newPosition.y = 0;
-            cart.transform.position = arcuoMarker.transformed_position;
-        }
-
         HashSet<int> seenMarkerIds = new HashSet<int>();
 
-        foreach (var transformedAnchor in transformedMessage.transformedArcuoAnchors)
+        foreach (var arcuoMarker in transformedMessage.transformedArcuoAnchors)
         {
-            int markerId = transformedAnchor.anchor_id;
+            int markerId = arcuoMarker.anchor_id;
             seenMarkerIds.Add(markerId);
 
-            //  This ID is still active -> meaning that we did not gracefully delete it yet
+            // update cart position skip for reload marker ID 2
+            if (markerId != 2)
+            {
+                Vector3 newPosition = arcuoMarker.transformed_position;
+                newPosition.y = 0;
+                cart.transform.position = newPosition;
+            }
+
+            // update or add marker to tracking
             if (activeMarkers.ContainsKey(markerId))
             {
-                // update existing marker
-                MarkerData markerData = activeMarkers[markerId];
-
-                if (markerData != null)
-                {
-                    // markerData.markerObject.transform.position = transformedAnchor.transformed_position;
-                    markerData.lastSeenInMessage = messageCounter;
-                    Debug.Log($"updated marker {markerId} lastSeenInMessage");
-                }
+                // pdate existing marker
+                activeMarkers[markerId].lastSeenInMessage = messageCounter;
+                Debug.Log($"updated marker {markerId} : {messageCounter}");
             }
-            else // This MarkerData was not in the dict -> so it did not exist beforehand or it was deleted once. so we add it again
+            else
             {
-                // Debug.Log($"creating new marker {markerId}");
-                if(markerId == 2)
+                // new marker detected
+                Debug.Log($"creating new marker {markerId} : messagecounter {messageCounter}");
+
+                if (markerId == 2 && !returnBasketState)
                 {
                     returnBasketState = true;
                     ToggleFlowerSearch();
                     ToggleMediapipeTracking();
-                    Debug.Log("IN BASKET MODE RIGHT NOW");
+                    Debug.Log("ENTERING BASKET MODE");
                 }
-                MarkerData currentMarkerData = new MarkerData(markerId, messageCounter);
-                activeMarkers[markerId] = currentMarkerData;
-                
+
+                activeMarkers[markerId] = new MarkerData(markerId, messageCounter);
             }
         }
 
@@ -417,6 +404,7 @@ public class TCP : MonoBehaviour
         {
             if (!seenMarkerIds.Contains(kvp.Key))
             {
+                int messagesSinceSeen = messageCounter - kvp.Value.lastSeenInMessage;
                 Debug.Log($"Marker {kvp.Key} not seen in this message (last seen: {kvp.Value.lastSeenInMessage}, current: {messageCounter})");
             }
         }
@@ -432,16 +420,18 @@ public class TCP : MonoBehaviour
             MarkerData markerData = kvp.Value;
 
             int messagesSinceLastSeen = messageCounter - markerData.lastSeenInMessage;
-            Debug.Log($"IN DEBUG LOG RIGHT NOW: {markerId}, {markerData.lastSeenInMessage}");
+
             if (messagesSinceLastSeen >= MISSING_THRESHOLD)
             {
-                if(markerId == 2)
+                Debug.Log($"marker {markerId} exceeded threshold ({messagesSinceLastSeen} messages). Removing.");
+
+                // check if basket marker is being removed
+                if (markerId == 2 && returnBasketState)
                 {
                     returnBasketState = false;
                     ToggleFlowerSearch();
                     ToggleMediapipeTracking();
                     Debug.Log("NOT IN BASKET MODE ANYMORE");
-                // Debug.Log($"marker {markerId} missing for {messagesSinceLastSeen} messages. Switched mode");
                 }
                 markersToRemove.Add(markerId);
             }
@@ -505,10 +495,11 @@ public class TCP : MonoBehaviour
         }
 
         if (spawner != null)
-        {   
+        {
             Debug.Log("Activate Flowers");
             spawner.GetComponent<SpawnGameObject>().ActivateFlowers();
         }
     }
 
 }
+    
