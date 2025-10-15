@@ -1,6 +1,10 @@
 finished:
-- running the mediapipe and arcuo marker detection  simutaniously
+- running the mediapipe and arcuo marker detection simultaneously
 - mirror users movement
+- added environment
+- added vfx effect
+- sound effect
+
 
 todo:
 - movement cart object according to markers
@@ -16,6 +20,7 @@ CONTROL FLOW:
 - - adding method with grace period for detecting marker 2
 
 
+bonus 0: particle effect,  
 bonus lab 1: ball tracking with yolo -> object recognition
 bonus lab 2: grace period for different object and smoothing 
 bonus lab 3: idle animation and legs tracking
@@ -24,3 +29,4 @@ bonus lab 3: idle animation and legs tracking
 control flow:
 client sends message to server including the id 2 -> server switches mode to DISABLE THE FLOWERS 
 when id is not in the message anymore run the graceperiod method to check if its actually gone and then change to mode again and TURN ON FLOWERS
+

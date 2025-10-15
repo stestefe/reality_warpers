@@ -85,20 +85,24 @@ def socket_client():
                 skeleton_data = mp.skeleton(color_image, detection_results, depth_frame)
 
                 # early exit
-                if (skeleton_data is None or ids is None):
-                    cv2.namedWindow('RealSense', cv2.WINDOW_AUTOSIZE)
-                    color_image = cv2.flip(color_image, 1)
-                    cv2.imshow('RealSense', color_image)
-                    cv2.waitKey(1)
-                    continue
+                # if (skeleton_data is None or ids is None):
+                #     cv2.namedWindow('RealSense', cv2.WINDOW_AUTOSIZE)
+                #     color_image = cv2.flip(color_image, 1)
+                #     cv2.imshow('RealSense', color_image)
+                #     cv2.waitKey(1)
+                #     continue
 
-                skeleton_points = np.array([
-                    # [skeleton_data['Head_x'], skeleton_data['Head_y'], skeleton_data['Head_z']],
-                    [skeleton_data['LHand_x'], skeleton_data['LHand_y'], skeleton_data['LHand_z']],
-                    [skeleton_data['RHand_x'], skeleton_data['RHand_y'], skeleton_data['RHand_z']],
-                    # [skeleton_data['LFoot_x'], skeleton_data['LFoot_y'], skeleton_data['LFoot_z']],
-                    # [skeleton_data['RFoot_x'], skeleton_data['RFoot_y'], skeleton_data['RFoot_z']]
-                ])
+
+                if skeleton_data is not None:
+                    skeleton_points = np.array([
+                        # [skeleton_data['Head_x'], skeleton_data['Head_y'], skeleton_data['Head_z']],
+                        [skeleton_data['LHand_x'], skeleton_data['LHand_y'], skeleton_data['LHand_z']],
+                        [skeleton_data['RHand_x'], skeleton_data['RHand_y'], skeleton_data['RHand_z']],
+                        # [skeleton_data['LFoot_x'], skeleton_data['LFoot_y'], skeleton_data['LFoot_z']],
+                        # [skeleton_data['RFoot_x'], skeleton_data['RFoot_y'], skeleton_data['RFoot_z']]
+                    ])
+                else:
+                    skeleton_points = np.empty((0, 3))
 
                 # print("MediaPipe Skeleton:", skeleton_data, flush=True)
                 
@@ -122,6 +126,7 @@ def socket_client():
                             # append arcuo marker to environment
                             #skeleton_points.append([avg_coordinates[0], avg_coordinates[1], avg_coordinates[2]])
                             skeleton_points = np.append(skeleton_points, [avg_coordinates], axis=0)
+                            print("Skeleton Points:", skeleton_points, len(skeleton_points),flush=True)
 
                     # color_image = cv2.aruco.drawDetectedMarkers(color_image, corners, ids)
                     # print("IDS", ids)
@@ -142,14 +147,15 @@ def socket_client():
                         [anchors[2]['position']['x'], anchors[2]['position']['y'], anchors[2]['position']['z']]   # cart
                     ])
                 
-                    print("Unity Anchor Points:", unity_points, flush=True)
+                    print("Unity Anchor Points:", unity_points, len(unity_points),flush=True)
 
 
                     # CALIBRATION PHASE
                     if T_matrix is None:
                         # get the first three point (head, lHand, rHand) points from skeleton points
-                        calibration_samples.append((skeleton_points.copy()[:3], unity_points.copy()))
-                        print(f"calibration sample {len(calibration_samples)}/{CALIBRATION_SAMPLES_NEEDED}", flush=True)
+                        if len(skeleton_points) == 3 and len(unity_points) == 3:
+                            calibration_samples.append((skeleton_points.copy()[:3], unity_points.copy()))
+                            print(f"calibration sample {len(calibration_samples)}/{CALIBRATION_SAMPLES_NEEDED}", flush=True)
                         
                         if len(calibration_samples) >= CALIBRATION_SAMPLES_NEEDED:
                             all_skeleton = np.vstack([s for s, u in calibration_samples]) # CALIBRATION_SAMPLES_NEEDED X 4
@@ -226,9 +232,10 @@ def socket_client():
                             'transformedSkeletonAnchors': transformed_skeleton_anchors,
                             'transformedArcuoAnchors': transformed_arcuo_anchors # transformed_arcuo_anchors
                         }
-                        print(f"Sending transformed positions:", response_msg, flush=True)
+                        # print(f"Sending transformed positions:", response_msg, flush=True)
                         send(sock, response_msg)
                         arcuo_coordinates = {}
+                        skeleton_points = np.empty((0, 3))
                     else:
                         response_msg = {
                             'transformedSkeletonAnchors': [],
@@ -236,6 +243,7 @@ def socket_client():
                         }
                         send(sock, response_msg)
                         arcuo_coordinates = {}
+                        skeleton_points = np.empty((0, 3))
                     
                     time.sleep(0.05)
                     
@@ -265,7 +273,7 @@ def receive(sock):
 def send(sock, msg):
     data = json.dumps(msg)
     sock.sendall(data.encode('utf-8'))
-    print("Sent to server:", msg, flush=True)
+    # print("Sent to server:", msg, flush=True)
 
 if __name__ == "__main__":
     # start thread with socket code
