@@ -14,6 +14,7 @@ using System.Linq;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.Animations.Rigging;
+using TMPro;
 
 public class TCP : MonoBehaviour
 {
@@ -33,6 +34,9 @@ public class TCP : MonoBehaviour
     // public Transform RFoot;
 
     public GameObject yBot;
+
+    public TextMeshProUGUI yBotText;
+
     public GameObject VrRig;
 
     public BoneRenderer boneRenderer;
@@ -392,6 +396,7 @@ public class TCP : MonoBehaviour
                     returnBasketState = true;
                     ToggleFlowerSearch();
                     ToggleMediapipeTracking();
+                    ToggleGirlText();
                     Debug.Log("ENTERING BASKET MODE");
                 }
 
@@ -431,6 +436,7 @@ public class TCP : MonoBehaviour
                     returnBasketState = false;
                     ToggleFlowerSearch();
                     ToggleMediapipeTracking();
+                    ToggleGirlText();
                     Debug.Log("NOT IN BASKET MODE ANYMORE");
                 }
                 markersToRemove.Add(markerId);
@@ -462,6 +468,16 @@ public class TCP : MonoBehaviour
         rigBuilder.enabled = false;
         VrRig.SetActive(false);
         // playerAnimation.SetBo
+    }
+
+    private void ToggleGirlText()
+    {
+        if (returnBasketState)
+        {
+            yBotText.text = "PLEASE RETURN TO ME! I NEED THE FLOWERS RIGHT NOW!!";
+            return;
+        }
+        yBotText.text = "Collect flowers for me! pleasee <3";
     }
 
     private void ToggleFlowerSearch()
