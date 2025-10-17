@@ -21,7 +21,8 @@ todo:
 - bee tracking bonus
 - add foot tracking for bonus
 
-- bee tracking bonus
+- bee tracking bonus -> sounds, effects, 3 flowers are picked up, bee spawnning, 
+and when bee collides with the cart then gameover for player appear infront of his face
 
 - add 3 rounds logic
 

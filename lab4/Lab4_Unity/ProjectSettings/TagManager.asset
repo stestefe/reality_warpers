@@ -5,6 +5,8 @@ TagManager:
   serializedVersion: 2
   tags:
   - Flower
+  - bee
+  - Bee
   layers:
   - Default
   - TransparentFX

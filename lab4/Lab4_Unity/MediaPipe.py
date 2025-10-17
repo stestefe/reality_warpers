@@ -88,19 +88,21 @@ class MediaPipe:
             return None
         LHand_x, LHand_y, LHand_z = lWrist3D
         
-        # lFoot3D = self.point_to_3D(
-        #     results.pose_landmarks.landmark[self.mp_holistic.PoseLandmark.LEFT_ANKLE],
-        #     image, depth_frame)
-        # if lFoot3D is None:
-        #     return None
-        # LFoot_x, LFoot_y, LFoot_z = lFoot3D
+        lFoot3D = self.point_to_3D(
+            results.pose_landmarks.landmark[self.mp_holistic.PoseLandmark.LEFT_ANKLE],
+            image, depth_frame)
+        if lFoot3D is None:
+            lFoot3D = (0.0, 0.0, 0.0)
+            # return None
+        LFoot_x, LFoot_y, LFoot_z = lFoot3D
         
-        # rFoot3D = self.point_to_3D(
-        #     results.pose_landmarks.landmark[self.mp_holistic.PoseLandmark.RIGHT_ANKLE],
-        #     image, depth_frame)
-        # if rFoot3D is None:
-        #     return None
-        # RFoot_x, RFoot_y, RFoot_z = rFoot3D
+        rFoot3D = self.point_to_3D(
+            results.pose_landmarks.landmark[self.mp_holistic.PoseLandmark.RIGHT_ANKLE],
+            image, depth_frame)
+        if rFoot3D is None:
+            rFoot3D = (0.0, 0.0, 0.0)
+            # return None
+        RFoot_x, RFoot_y, RFoot_z = rFoot3D
         
         msg = {
             # 'Head_x': Head_x, 'Head_y': Head_y, 'Head_z': Head_z,

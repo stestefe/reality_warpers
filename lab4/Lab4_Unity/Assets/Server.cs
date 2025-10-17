@@ -47,6 +47,8 @@ public class TCP : MonoBehaviour
 
     private bool returnBasketState;
 
+    public GameObject beeObject; 
+
     public Dictionary<string, int> bodyDict = new Dictionary<string, int>{
         { "head", 0 },
         { "leftHand", 1 },
@@ -100,7 +102,7 @@ public class TCP : MonoBehaviour
     private static object Lock = new object();
     private List<TransformedMessage> MessageQue = new List<TransformedMessage>();
 
-    private Dictionary<int, MarkerData> activeMarkers = new Dictionary<int, MarkerData>();
+    private Dictionary<int, S> activeMarkers = new Dictionary<int, MarkerData>();
 
     const int MISSING_THRESHOLD = 5;
 
@@ -383,11 +385,18 @@ public class TCP : MonoBehaviour
             seenMarkerIds.Add(markerId);
 
             // update cart position skip for reload marker ID 2
-            if (markerId != 2)
+            if (markerId != 2 && markerId != 23)
             {
                 Vector3 newPosition = arcuoMarker.transformed_position;
                 newPosition.y = 0;
                 cart.transform.position = newPosition;
+            }
+
+            if(markerId == 23)
+            {
+                Vector3 newPosition = arcuoMarker.transformed_position;
+                newPosition.y = 1.2f;
+                beeObject.transform.position = newPosition;
             }
 
             // update or add marker to tracking
