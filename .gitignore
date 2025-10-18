@@ -1,0 +1,79 @@
+# =============== #
+# Unity generated #
+# =============== #
+
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Mm]emoryCaptures/
+
+# ============================ #
+# OS or IDE generated folders #
+# ============================ #
+
+.DS_Store
+Thumbs.db
+*.swp
+*.tmp
+*.bak
+*.hdr
+
+# ============== #
+# VS / JetBrains #
+# ============== #
+
+.vscode/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+.idea/
+*.dotCover
+
+# Rider / JetBrains logs
+.idea/
+*.sln.iml
+
+# Unity Cache
+UnityPackageManager/
+
+# Crashlytics
+crashlytics-build.properties
+
+# =========== #
+# Builds      #
+# =========== #
+
+*.apk
+*.aab
+*.xcodeproj
+*.xcworkspace
+*.xcuserstate
+*.ipa
+*.app
+*.exe
+
+# ================= #
+# Asset Store tools #
+# ================= #
+
+Assets/AssetStoreTools*
+
+# ===================== #
+# Collaborate / Plastic #
+# ===================== #
+
+.collab/
+.plastic/
+Ignore.conf
+hidden_changes/
