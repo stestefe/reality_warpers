@@ -49,7 +49,9 @@ public class TCP : MonoBehaviour
 
     public GameObject beeObject;
     public TextMeshProUGUI girlText;
-    public TextMeshProUGUI gameOverText;
+    public TextMeshProUGUI winText;
+    public TextMeshProUGUI looserText;
+    private int rounds = 0;
 
     public GameObject winFireworks;
 
@@ -446,7 +448,7 @@ public class TCP : MonoBehaviour
         if(transformedMessage.bottles_count >= 3)
         {
             girlText.gameObject.SetActive(false);
-            gameOverText.gameObject.SetActive(true);
+            winText.gameObject.SetActive(true);
             
             GameObject spawner = GameObject.FindObjectOfType<SpawnGameObject>()?.gameObject;
             if (spawner != null)
@@ -525,9 +527,22 @@ public class TCP : MonoBehaviour
     }
 
     private void ToggleGirlText()
-    {
+    {   
         if (returnBasketState)
         {
+            rounds += 1;
+            if (rounds > 3)
+            {
+                girlText.gameObject.SetActive(false);
+                winText.gameObject.SetActive(false);
+                looserText.gameObject.SetActive(true);
+
+                GameObject spawner = GameObject.FindObjectOfType<SpawnGameObject>()?.gameObject;
+                if (spawner != null)
+                {
+                    spawner.GetComponent<SpawnGameObject>().DeactivateFlowers();
+                }
+            }
             yBotText.text = "PLEASE RETURN TO ME! I NEED THE FLOWERS RIGHT NOW!!";
             playerAnimation.SetBool("Breakdancing", false);
             return;
