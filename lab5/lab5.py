@@ -194,6 +194,8 @@ def pipeline(type_of_run):
         print("INTERACTION_GENERATOR_JSON: ", INTERACTION_GENERATOR_JSON)
         print("EDGE_GENERATOR_JSON: ", EDGE_GENERATOR_JSON)
 
+        if i == 0:
+            export_for_swift(current_goals, current_objects, INTERACTION_GENERATOR_JSON, EDGE_GENERATOR_JSON, "puzzle_save_cat")
         # Build the puzzle graph
         G = build_puzzle_graph(INTERACTION_GENERATOR_JSON, EDGE_GENERATOR_JSON)
 
@@ -242,7 +244,23 @@ def call_openai(prompt: str, client: OpenAI) -> str:
     return resp.choices[0].message.content
 
 
+def export_for_swift(goal: str, objects: List[str], 
+                     interactions_json: str, edges_json: str, 
+                     output_file: str):
+    combined = {
+        "goal": goal,
+        "objects": objects,
+        "interactions": json.loads(interactions_json)["interactions"],
+        "edges": json.loads(edges_json)["edges"]
+    }
+    
+    with open(output_file, 'w') as f:
+        json.dump(combined, f, indent=2)
+    
+    print(f"Exported: {output_file}")
+
+
 if __name__ == "__main__":
-    #pipeline(1)
-    pipeline(2)
+    pipeline(1)
+    # pipeline(2)
 
