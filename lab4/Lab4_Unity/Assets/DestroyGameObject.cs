@@ -8,11 +8,11 @@ public class DestroyOnTrigger : MonoBehaviour
 {
 
     public GameObject collisionEffectPrefab;
-    public GameObject beeCollisionEffectPrefab;
+    // public GameObject beeCollisionEffectPrefab;
 
-    public GameObject beeObject;
+    // public GameObject beeObject;
 
-    private int flowersCollected = 0;
+    // private int flowersCollected = 0;
 
     [SerializeField] private AudioClip collectSound;
 
@@ -46,24 +46,24 @@ public class DestroyOnTrigger : MonoBehaviour
                 spawner.GetComponent<SpawnGameObject>().RemoveFromList(other.gameObject);
             }
 
-            flowersCollected++;
-            if (flowersCollected >= 3)
-            {
-                beeObject.SetActive(true);
-            }
+            // flowersCollected++;
+            // if (flowersCollected >= 3)
+            // {
+            //     beeObject.SetActive(true);
+            // }
         }
         
-        if (other.CompareTag("Bee"))
-        {
-            Destroy(other.gameObject);
-            Vector3 position = other.gameObject.transform.position;
+        // if (other.CompareTag("Bee"))
+        // {
+        //     Destroy(other.gameObject);
+        //     Vector3 position = other.gameObject.transform.position;
 
-            GameObject effect = Instantiate(beeCollisionEffectPrefab, position, Quaternion.identity);
-            girlText.gameObject.SetActive(false);
-            gameOverText.gameObject.SetActive(true);
-            Destroy(effect, 1f);
-            audioSource.clip = collectSound;
-            audioSource.Play();
-        }
+        //     GameObject effect = Instantiate(beeCollisionEffectPrefab, position, Quaternion.identity);
+        //     girlText.gameObject.SetActive(false);
+        //     gameOverText.gameObject.SetActive(true);
+        //     Destroy(effect, 1f);
+        //     audioSource.clip = collectSound;
+        //     audioSource.Play();
+        // }
     }
 }
