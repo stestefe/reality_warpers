@@ -12,6 +12,13 @@ from collections import defaultdict, deque
 import threading
 import time
 
+
+import cv2
+from ultralytics import YOLO
+
+model = YOLO("yolov8n.pt") 
+BOTTLE_CLASS = 39
+
 from scipy.linalg import lstsq
 from scipy.spatial.transform import Rotation
 
@@ -83,6 +90,21 @@ def socket_client():
                 color_image = mp.draw_landmarks_on_image(color_image, detection_results)
 
                 corners, ids, _ = arucoDetector.detectMarkers(color_image)
+
+                ball_results = model.predict(color_image, verbose=False)
+
+                for result in ball_results:
+                    boxes = result.boxes
+                    for box in boxes:
+                        cls_id = int(box.cls[0])
+                        conf = float(box.conf[0])
+                        print("confidence" ,conf)
+                        if cls_id == BOTTLE_CLASS and conf > 0.1:  
+                            x1, y1, x2, y2 = map(int, box.xyxy[0])
+                            cv2.rectangle(color_image, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                            cv2.putText(color_image, f"Ball {conf:.2f}", (x1, y1 - 5),
+                                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+
                 # print(corners, ids, flush = True)
                 intrinsics = depth_frame.profile.as_video_stream_profile().get_intrinsics()
                 
@@ -135,7 +157,7 @@ def socket_client():
                     # color_image = cv2.aruco.drawDetectedMarkers(color_image, corners, ids)
                     # print("IDS", ids)
                     # print("Corners", corners)
-                    cv2.aruco.drawDetectedMarkers(color_image, corners, ids)
+                    # cv2.aruco.drawDetectedMarkers(color_image, corners, ids)
                 else:
                     arcuo_coordinates = {}
 
@@ -151,7 +173,7 @@ def socket_client():
                         [anchors[2]['position']['x'], anchors[2]['position']['y'], anchors[2]['position']['z']]   # cart
                     ])
                 
-                    print("Unity Anchor Points:", unity_points, len(unity_points),flush=True)
+                    # print("Unity Anchor Points:", unity_points, len(unity_points),flush=True)
 
 
                     # CALIBRATION PHASE

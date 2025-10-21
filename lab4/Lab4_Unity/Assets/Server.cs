@@ -102,7 +102,7 @@ public class TCP : MonoBehaviour
     private static object Lock = new object();
     private List<TransformedMessage> MessageQue = new List<TransformedMessage>();
 
-    private Dictionary<int, S> activeMarkers = new Dictionary<int, MarkerData>();
+    private Dictionary<int, MarkerData> activeMarkers = new Dictionary<int, MarkerData>();
 
     const int MISSING_THRESHOLD = 5;
 
