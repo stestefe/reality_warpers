@@ -1,0 +1,75 @@
+{
+  "goal": "Save a cat from a tall tree",
+  "objects": [
+    "bucket",
+    "hammer",
+    "coffee cup",
+    "alcohol spray",
+    "umbrella"
+  ],
+  "interactions": [
+    {
+      "id": "1_Fill_Bucket_And_Install_ScrewEye",
+      "description": "Preconditions: bucket empty, rocks available, hammer at hand. Action: fill the bucket with rocks and place it beneath the tree; use the hammer to drive a screw-eye or small stake into the trunk and attach a short harness/line from the screw-eye to the bucket so the bucket acts as a counterweight anchor and visible/cushioned landing zone.",
+      "required_objects": [
+        "bucket",
+        "hammer"
+      ],
+      "effect": "bucket: empty -> filled_with_rocks_and_placed_under_tree_as_counterweight_anchor; screw-eye: not_installed -> installed_in_trunk_and_connected_to_bucket_anchor"
+    },
+    {
+      "id": "2_Secure_Umbrella_To_Anchor_With_Hammer",
+      "description": "Preconditions: screw-eye installed and bucket anchored beneath tree. Action: use the hammer to fasten or lash the umbrella (handle or ribs) to the screw-eye/harness so the umbrella can be positioned as a wide, soft catch-net over the bucket.",
+      "required_objects": [
+        "hammer",
+        "umbrella"
+      ],
+      "effect": "umbrella: closed -> opened_and_secured_to_screw_eye_anchor_over_bucket_as_catch_net"
+    },
+    {
+      "id": "3_Guide_Cat_With_Closed_Umbrella_And_Lure",
+      "description": "Preconditions: umbrella positioned over anchor as catch-net (can be momentarily manipulated). Action: close or partially collapse the umbrella to use its handle as a gentle hook/extended reach while someone offers strong-smelling treats carried in the coffee cup to lure and coax the cat toward a lower branch or the harness area.",
+      "required_objects": [
+        "umbrella",
+        "coffee cup"
+      ],
+      "effect": "coffee cup: empty -> contains_strong-smelling_treats_used_to_lure_cat; umbrella: opened_and_secured -> closed/used_as_gentle_hook_to_guide_cat_toward_safer_branch"
+    },
+    {
+      "id": "4_Disinfect_Harness_After_Lure",
+      "description": "Preconditions: cat guided closer and harness/fasteners will be handled. Action: use the alcohol spray to disinfect the improvised harness/fasteners that contact the cat (and wipe the coffee cup if it was handled) to reduce infection risk before any close contact or manual retrieval.",
+      "required_objects": [
+        "coffee cup",
+        "alcohol spray"
+      ],
+      "effect": "harness/fasteners: un_disinfected -> disinfected_with_alcohol_spray; coffee cup: used_to_lure -> wiped_or_cleaned"
+    },
+    {
+      "id": "5_Final_Check_And_Sanitize_Anchor_Bucket",
+      "description": "Preconditions: harness disinfected, umbrella guiding in place, bucket anchor under tree. Action: use the alcohol spray to sanitize the bucket's anchor connection and check that the bucket remains filled/positioned; re-tension or re-seat the anchor if needed so the opened umbrella over the bucket remains a reliable soft catch as the cat descends.",
+      "required_objects": [
+        "alcohol spray",
+        "bucket"
+      ],
+      "effect": "bucket_anchor_connection: un_disinfected_or_loose -> disinfected_and_checked_tightened; bucket: remains_filled_and_correctly_positioned_under_tree"
+    }
+  ],
+  "edges": [
+    [
+      "1_Fill_Bucket_And_Install_ScrewEye",
+      "2_Secure_Umbrella_To_Anchor_With_Hammer"
+    ],
+    [
+      "2_Secure_Umbrella_To_Anchor_With_Hammer",
+      "3_Guide_Cat_With_Closed_Umbrella_And_Lure"
+    ],
+    [
+      "3_Guide_Cat_With_Closed_Umbrella_And_Lure",
+      "4_Disinfect_Harness_After_Lure"
+    ],
+    [
+      "4_Disinfect_Harness_After_Lure",
+      "5_Final_Check_And_Sanitize_Anchor_Bucket"
+    ]
+  ]
+}
