@@ -47,7 +47,11 @@ public class TCP : MonoBehaviour
 
     private bool returnBasketState;
 
-    public GameObject beeObject; 
+    public GameObject beeObject;
+    public TextMeshProUGUI girlText;
+    public TextMeshProUGUI gameOverText;
+
+    public GameObject winFireworks;
 
     public Dictionary<string, int> bodyDict = new Dictionary<string, int>{
         { "head", 0 },
@@ -73,6 +77,7 @@ public class TCP : MonoBehaviour
     [Serializable]
     public class TransformedMessage
     {
+        public int bottles_count;
         public List<TransformedAnchor> transformedSkeletonAnchors = new List<TransformedAnchor>();
         public List<TransformedAnchor> transformedArcuoAnchors = new List<TransformedAnchor>();
     }
@@ -172,6 +177,7 @@ public class TCP : MonoBehaviour
             {
                 messageCounter++;
                 MoveCart(msg);
+                CheckWinCondition(msg);
                 // playerAnimation.SetBool("Breakdancing", true);
                 if (returnBasketState == true)
                 {
@@ -392,7 +398,7 @@ public class TCP : MonoBehaviour
                 cart.transform.position = newPosition;
             }
 
-            if(markerId == 23)
+            if (markerId == 23)
             {
                 Vector3 newPosition = arcuoMarker.transformed_position;
                 newPosition.y = 1.2f;
@@ -432,6 +438,34 @@ public class TCP : MonoBehaviour
                 int messagesSinceSeen = messageCounter - kvp.Value.lastSeenInMessage;
                 Debug.Log($"Marker {kvp.Key} not seen in this message (last seen: {kvp.Value.lastSeenInMessage}, current: {messageCounter})");
             }
+        }
+    }
+    
+    private void CheckWinCondition(TransformedMessage transformedMessage)
+    {
+        if(transformedMessage.bottles_count >= 3)
+        {
+            girlText.gameObject.SetActive(false);
+            gameOverText.gameObject.SetActive(true);
+            
+            GameObject spawner = GameObject.FindObjectOfType<SpawnGameObject>()?.gameObject;
+            if (spawner != null)
+            {
+                spawner.GetComponent<SpawnGameObject>().DeactivateFlowers();
+            }
+
+            for (int i = 0; i < 30; i++)
+            {
+                float x = UnityEngine.Random.Range(-7, 7);
+                float y = UnityEngine.Random.Range(0, 5);
+                float z = UnityEngine.Random.Range(-7, 7);
+                Vector3 spawnPos = new Vector3(x, y, z);
+
+                GameObject effect = Instantiate(winFireworks, spawnPos, Quaternion.identity);
+                Destroy(effect, 1f);
+            }
+            
+
         }
     }
 

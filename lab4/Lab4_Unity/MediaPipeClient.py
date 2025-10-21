@@ -93,13 +93,15 @@ def socket_client():
 
                 ball_results = model.predict(color_image, verbose=False)
 
+                bottles_count = 0
+
                 for result in ball_results:
                     boxes = result.boxes
                     for box in boxes:
                         cls_id = int(box.cls[0])
                         conf = float(box.conf[0])
-                        print("confidence" ,conf)
-                        if cls_id == BOTTLE_CLASS and conf > 0.1:  
+                        if cls_id == BOTTLE_CLASS and conf > 0.3:
+                            bottles_count+=1
                             x1, y1, x2, y2 = map(int, box.xyxy[0])
                             cv2.rectangle(color_image, (x1, y1), (x2, y2), (0, 255, 0), 2)
                             cv2.putText(color_image, f"Ball {conf:.2f}", (x1, y1 - 5),
@@ -152,12 +154,12 @@ def socket_client():
                             # append arcuo marker to environment
                             #skeleton_points.append([avg_coordinates[0], avg_coordinates[1], avg_coordinates[2]])
                             skeleton_points = np.append(skeleton_points, [avg_coordinates], axis=0)
-                            print("Skeleton Points:", skeleton_points, len(skeleton_points),flush=True)
+                            # print("Skeleton Points:", skeleton_points, len(skeleton_points),flush=True)
 
                     # color_image = cv2.aruco.drawDetectedMarkers(color_image, corners, ids)
                     # print("IDS", ids)
                     # print("Corners", corners)
-                    # cv2.aruco.drawDetectedMarkers(color_image, corners, ids)
+                    cv2.aruco.drawDetectedMarkers(color_image, corners, ids)
                 else:
                     arcuo_coordinates = {}
 
@@ -255,6 +257,7 @@ def socket_client():
 
                         # assemble message type
                         response_msg = {
+                            'bottles_count' : bottles_count,
                             'transformedSkeletonAnchors': transformed_skeleton_anchors,
                             'transformedArcuoAnchors': transformed_arcuo_anchors # transformed_arcuo_anchors
                         }
@@ -264,6 +267,7 @@ def socket_client():
                         skeleton_points = np.empty((0, 3))
                     else:
                         response_msg = {
+                            'bottles_count' : 0,
                             'transformedSkeletonAnchors': [],
                             'transformedArcuoAnchors': []
                         }
@@ -293,7 +297,7 @@ def receive(sock):
     data = sock.recv(4096)
     data = data.decode('utf-8')
     msg = json.loads(data)
-    # print("Received:", msg, flush=True)
+    print("Received:", msg, flush=True)
     return msg
 
 def send(sock, msg):
