@@ -1,11 +1,14 @@
-# pip install ultralytics opencv-python
-
 import cv2
 from ultralytics import YOLO
 
 model = YOLO("yolov8n.pt") 
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)  
+# cap = cv2.VideoCapture(0)
+
+if not cap.isOpened():
+    exit()
+
 
 SPORTS_BALL_CLASS = 32
 
