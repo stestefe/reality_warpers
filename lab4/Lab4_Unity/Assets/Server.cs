@@ -15,6 +15,7 @@ using System.Threading;
 using UnityEngine;
 using UnityEngine.Animations.Rigging;
 using TMPro;
+using System.Collections;
 
 public class TCP : MonoBehaviour
 {
@@ -442,34 +443,42 @@ public class TCP : MonoBehaviour
             }
         }
     }
-    
+
     private void CheckWinCondition(TransformedMessage transformedMessage)
+{
+    if (transformedMessage.bottles_count >= 3)
     {
-        if(transformedMessage.bottles_count >= 3)
+        girlText.gameObject.SetActive(false);
+        winText.gameObject.SetActive(true);
+
+        GameObject spawner = GameObject.FindObjectOfType<SpawnGameObject>()?.gameObject;
+        if (spawner != null)
         {
-            girlText.gameObject.SetActive(false);
-            winText.gameObject.SetActive(true);
-            
-            GameObject spawner = GameObject.FindObjectOfType<SpawnGameObject>()?.gameObject;
-            if (spawner != null)
-            {
-                spawner.GetComponent<SpawnGameObject>().DeactivateFlowers();
-            }
-
-            for (int i = 0; i < 30; i++)
-            {
-                float x = UnityEngine.Random.Range(-7, 7);
-                float y = UnityEngine.Random.Range(0, 5);
-                float z = UnityEngine.Random.Range(-7, 7);
-                Vector3 spawnPos = new Vector3(x, y, z);
-
-                GameObject effect = Instantiate(winFireworks, spawnPos, Quaternion.identity);
-                Destroy(effect, 1f);
-            }
-            
-
+            spawner.GetComponent<SpawnGameObject>().DeactivateFlowers();
         }
+
+        StartCoroutine(SpawnFireworksForever());
     }
+}
+    
+    private IEnumerator SpawnFireworksForever()
+{
+    while (true)
+    {
+        for (int i = 0; i < 30; i++)
+        {
+            float x = UnityEngine.Random.Range(-7f, 7f);
+            float y = UnityEngine.Random.Range(0f, 5f);
+            float z = UnityEngine.Random.Range(-7f, 7f);
+            Vector3 spawnPos = new Vector3(x, y, z);
+
+            GameObject effect = Instantiate(winFireworks, spawnPos, Quaternion.identity);
+            Destroy(effect, 1f);
+        }
+
+        yield return new WaitForSeconds(40f);
+    }
+}
 
     private void CleanupInactiveIdMarkers()
     {
