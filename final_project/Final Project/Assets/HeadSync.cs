@@ -16,14 +16,14 @@ public class HeadSync : NetworkBehaviour
             
             if (localCenterEyeAnchor == null)
             {
-                Debug.LogError("could not find centereyeanchor!");
+                Debug.LogError("could not find target!");
             }
             else
             {
-                Debug.Log("successfully found centereye");
+                Debug.Log("successfully found target");
                 isInitialized = true;
             }
-            // TODO: comment out later
+            // // TODO: comment out later
             CreateVisualRepresentation();
         }
         else

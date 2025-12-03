@@ -354,7 +354,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4c91556899dab0647b6a95e1b84510c4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  headRepresentationPrefab: {fileID: 5703163120207959472, guid: 7a0fe223b802dc34fa0a78270c140464, type: 3}
+  hostHeadRepresentationPrefab: {fileID: 5703163120207959472, guid: 7a0fe223b802dc34fa0a78270c140464, type: 3}
+  clientHeadRepresentationPrefab: {fileID: 5703163120207959472, guid: 56973b1bce570174f9812f1a3bbdab31, type: 3}
 --- !u!1001 &92232769
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -726,7 +727,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!81 &330585544
 AudioListener:
   m_ObjectHideFlags: 0
@@ -1927,7 +1928,6 @@ GameObject:
   - component: {fileID: 1264273445}
   - component: {fileID: 1264273444}
   - component: {fileID: 1264273446}
-  - component: {fileID: 1264273447}
   m_Layer: 0
   m_Name: CenterEyeAnchor
   m_TagString: MainCamera
@@ -2053,41 +2053,6 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
---- !u!114 &1264273447
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1264273442}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0e2ea3c700f87fe4883bee5e7f56d740, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  frustum1:
-    nearHalfWidth: 0.27
-    nearHalfHeight: 1.5
-    farHalfWidth: 2.8
-    farHalfHeight: 1.5
-    depth: 3.1
-    lineWidth: 0.005
-    lineMaterial: {fileID: 0}
-  frustum2:
-    nearHalfWidth: 0.27
-    nearHalfHeight: 1.5
-    farHalfWidth: 0.99
-    farHalfHeight: 1.5
-    depth: 3.1
-    lineWidth: 0.005
-    lineMaterial: {fileID: 0}
-  visibleInEditor: 1
-  parentToCenterEye: 1
-  candidateEyeNames:
-  - CenterEyeAnchor
-  - CenterEye
-  enableCollisionDetection: 1
-  targetTag: MainCamera
 --- !u!1 &1372298028
 GameObject:
   m_ObjectHideFlags: 0
@@ -3156,7 +3121,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1851482010
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3825,6 +3790,72 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2132818514
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2132818516}
+  - component: {fileID: 2132818515}
+  m_Layer: 0
+  m_Name: ClientFrustumTempHolder
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!114 &2132818515
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2132818514}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5e0d0f900b87c8469cd73bb6eca2855, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  frustum1:
+    nearHalfWidth: 0.27
+    nearHalfHeight: 1.5
+    farHalfWidth: 2.8
+    farHalfHeight: 1.5
+    depth: 3.1
+    lineWidth: 0.005
+    lineMaterial: {fileID: 0}
+  frustum2:
+    nearHalfWidth: 0.27
+    nearHalfHeight: 1.5
+    farHalfWidth: 0.99
+    farHalfHeight: 1.5
+    depth: 3.1
+    lineWidth: 0.005
+    lineMaterial: {fileID: 0}
+  parentToDynamicTarget: 1
+  targetObjectName: RemoteHeadRepresentation(Clone)
+  searchInterval: 0.5
+  visibleInEditor: 0
+  enableCollisionDetection: 1
+  targetTag: MainCamera
+--- !u!4 &2132818516
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2132818514}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2143863627
 GameObject:
   m_ObjectHideFlags: 0
@@ -4221,6 +4252,7 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 330585546}
+  - {fileID: 2132818516}
   - {fileID: 832575519}
   - {fileID: 92232769}
   - {fileID: 786246416}
