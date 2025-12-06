@@ -11,22 +11,22 @@ public class NetworkConnect : MonoBehaviour
     public void StartHost()
     {
         NetworkManager.Singleton.StartHost();
-        SpawnLocalPlayerObject(true);
+        // SpawnLocalPlayerObject(true);
     }
 
     public void StartClient()
     {
-        NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
+        // NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
         NetworkManager.Singleton.StartClient();
         // SpawnLocalPlayerObject(false);
     }
 
     private void OnClientConnected(ulong clientId)
     {
-        // if (clientId == NetworkManager.Singleton.LocalClientId)
-        // {
-        //     SpawnLocalPlayerObject(false);
-        // }
+        if (clientId == NetworkManager.Singleton.LocalClientId)
+        {
+            SpawnLocalPlayerObject(false);
+        }
     }
 
     private void SpawnLocalPlayerObject(bool isHost)
