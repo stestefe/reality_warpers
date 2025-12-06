@@ -3,14 +3,17 @@ using Unity.Netcode;
 
 public class NetworkConnect : MonoBehaviour
 {
-    [SerializeField] private GameObject hostHeadRepresentationPrefab;
-    [SerializeField] private GameObject clientHeadRepresentationPrefab;
+//     [SerializeField] private GameObject hostHeadRepresentationPrefab;
+//     [SerializeField] private GameObject clientHeadRepresentationPrefab;
+
+    [SerializeField] private NetworkObjectSpawner spawner;
 
     private GameObject localHeadRepresentation;
 
     public void StartHost()
     {
         NetworkManager.Singleton.StartHost();
+        spawner.SpawnAll();
         // SpawnLocalPlayerObject(true);
     }
 
@@ -21,34 +24,34 @@ public class NetworkConnect : MonoBehaviour
         // SpawnLocalPlayerObject(false);
     }
 
-    private void OnClientConnected(ulong clientId)
-    {
-        if (clientId == NetworkManager.Singleton.LocalClientId)
-        {
-            SpawnLocalPlayerObject(false);
-        }
-    }
+    // private void OnClientConnected(ulong clientId)
+    // {
+    //     if (clientId == NetworkManager.Singleton.LocalClientId)
+    //     {
+    //         SpawnLocalPlayerObject(false);
+    //     }
+    // }
 
-    private void SpawnLocalPlayerObject(bool isHost)
-    {
-        if (localHeadRepresentation != null)
-            return;
+    // private void SpawnLocalPlayerObject(bool isHost)
+    // {
+    //     if (localHeadRepresentation != null)
+    //         return;
 
-        GameObject prefab = isHost ? hostHeadRepresentationPrefab : clientHeadRepresentationPrefab;
-        Debug.Log($"HOSTS: {isHost}");
-        localHeadRepresentation = Instantiate(prefab);
+    //     GameObject prefab = isHost ? hostHeadRepresentationPrefab : clientHeadRepresentationPrefab;
+    //     Debug.Log($"HOSTS: {isHost}");
+    //     localHeadRepresentation = Instantiate(prefab);
 
-        NetworkObject netObj = localHeadRepresentation.GetComponent<NetworkObject>();
-        netObj.SpawnAsPlayerObject(NetworkManager.Singleton.LocalClientId);
+    //     NetworkObject netObj = localHeadRepresentation.GetComponent<NetworkObject>();
+    //     netObj.SpawnAsPlayerObject(NetworkManager.Singleton.LocalClientId);
 
-        Debug.Log("spawned head object for local client");
-    }
+    //     Debug.Log("spawned head object for local client");
+    // }
 
-    private void OnDestroy()
-    {
-        if (NetworkManager.Singleton != null)
-        {
-            NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
-        }
-    }
+    // private void OnDestroy()
+    // {
+    //     if (NetworkManager.Singleton != null)
+    //     {
+    //         NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
+    //     }
+    // }
 }

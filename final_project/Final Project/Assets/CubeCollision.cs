@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class CubCollision : MonoBehaviour
+public class CubeCollision : MonoBehaviour
 {
     private void OnCollisionEnter(Collision collision)
     {
