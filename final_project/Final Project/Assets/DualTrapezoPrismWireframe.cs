@@ -57,10 +57,9 @@ public class DualTrapezoPrismWireframe : MonoBehaviour
     private Transform targetEyeTransform;
     private GameObject containerObject;
     
-    // Separate tracking for each frustum
-    private List<GameObject> objectsInFrustum1 = new List<GameObject>();
-    private List<GameObject> objectsInFrustum2 = new List<GameObject>();
-    private List<GameObject> objectsInAnyFrustum = new List<GameObject>();
+    public List<GameObject> objectsInFrustum1 = new List<GameObject>();
+    public List<GameObject> objectsInFrustum2 = new List<GameObject>();
+    public List<GameObject> objectsInAnyFrustum = new List<GameObject>();
 
     private static readonly int[,] edges = new int[,]
     {
@@ -312,7 +311,6 @@ public class DualTrapezoPrismWireframe : MonoBehaviour
             }
         }
 
-        // Update combined list
         if (!objectsInAnyFrustum.Contains(obj))
         {
             objectsInAnyFrustum.Add(obj);
@@ -338,7 +336,6 @@ public class DualTrapezoPrismWireframe : MonoBehaviour
             }
         }
 
-        // Update combined list - only remove if not in any frustum
         if (!objectsInFrustum1.Contains(obj) && !objectsInFrustum2.Contains(obj))
         {
             objectsInAnyFrustum.Remove(obj);

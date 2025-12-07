@@ -237,6 +237,87 @@ MonoBehaviour:
     _installationVariants:
     - _memberName: mode
       _value: '{"value__":0}'
+--- !u!1 &10090912
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 10090914}
+  - component: {fileID: 10090913}
+  - component: {fileID: 10090915}
+  m_Layer: 0
+  m_Name: NetworkedFearMeter
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &10090913
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 10090912}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  GlobalObjectIdHash: 704712894
+  InScenePlacedSourceGlobalObjectIdHash: 0
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 0
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
+--- !u!4 &10090914
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 10090912}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &10090915
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 10090912}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9cdd4a68201367b4094c142d09ff5538, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
+  maxFear: 100
+  fearPerDetection: 10
+  meterPosition: {x: 0, y: 2, z: 5}
+  meterHeight: 2
+  meterRadius: 0.3
+  emptyColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
+  fillColor: {r: 1, g: 0, b: 0, a: 1}
+  frustumDetector: {fileID: 1264273447}
+  enableDebugLogs: 1
+  movementThreshold: 0.01
 --- !u!1 &89313554
 GameObject:
   m_ObjectHideFlags: 0
@@ -726,7 +807,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!81 &330585544
 AudioListener:
   m_ObjectHideFlags: 0
@@ -1341,7 +1422,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &786246412
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1973,6 +2054,9 @@ GameObject:
   - component: {fileID: 1264273445}
   - component: {fileID: 1264273444}
   - component: {fileID: 1264273446}
+  - component: {fileID: 1264273447}
+  - component: {fileID: 1264273449}
+  - component: {fileID: 1264273448}
   m_Layer: 0
   m_Name: CenterEyeAnchor
   m_TagString: MainCamera
@@ -2098,6 +2182,106 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
+--- !u!114 &1264273447
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1264273442}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e2ea3c700f87fe4883bee5e7f56d740, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  frustum1:
+    nearHalfWidth: 0.27
+    nearHalfHeight: 1.5
+    farHalfWidth: 2.8
+    farHalfHeight: 1.5
+    depth: 3.1
+    lineWidth: 0.005
+    lineMaterial: {fileID: 0}
+  frustum2:
+    nearHalfWidth: 0.27
+    nearHalfHeight: 1.5
+    farHalfWidth: 0.99
+    farHalfHeight: 1.5
+    depth: 3.1
+    lineWidth: 0.005
+    lineMaterial: {fileID: 0}
+  visibleInEditor: 1
+  parentToCenterEye: 1
+  candidateEyeNames:
+  - CenterEyeAnchor
+  - CenterEye
+  enableCollisionDetection: 1
+  targetTag: Object
+  objectsInFrustum1: []
+  objectsInFrustum2: []
+  objectsInAnyFrustum: []
+--- !u!114 &1264273448
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1264273442}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8df68355a2f0d1645b493cfac3044563, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1264273449
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1264273442}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bdb08b805db69d9409d98d9438e13cd4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
+  m_NetworkManager: {fileID: 0}
+  <IsLocalPlayer>k__BackingField: 0
+  <IsOwner>k__BackingField: 0
+  <IsServer>k__BackingField: 0
+  <HasAuthority>k__BackingField: 0
+  <IsSessionOwner>k__BackingField: 0
+  <ServerIsHost>k__BackingField: 0
+  <IsClient>k__BackingField: 0
+  <IsHost>k__BackingField: 0
+  <IsOwnedByServer>k__BackingField: 0
+  <IsSpawned>k__BackingField: 0
+  m_NetworkObject: {fileID: 0}
+  <NetworkObjectId>k__BackingField: 0
+  <NetworkBehaviourId>k__BackingField: 0
+  NetworkBehaviourIdCache: 0
+  <OwnerClientId>k__BackingField: 0
+  m_VarInit: 0
+  <m_TargetIdBeingSynchronized>k__BackingField: 0
+  maxFear: 100
+  fearIncrement: 10
+  meterPosition: {x: 0, y: 2, z: 2}
+  meterScale: {x: 2, y: 0.5, z: 0.2}
+  emptyColor:
+    r: 0
+    g: 1
+    b: 0
+    a: 1
+  fullColor:
+    r: 1
+    g: 0
+    b: 0
+    a: 1
+  currentFear: {m_NetworkBehaviour: {fileID: 0}, m_NetworkManager: {fileID: 0}, m_NetworkObject: {fileID: 0}, m_UseServerTime: 0, <HasBeenInitialized>k__BackingField: 0, m_IsDirty: 0, <Name>k__BackingField: , InternalWritePerm: 0, NetworkUpdaterCheck: 0, m_InternalValue: 0, m_LastInternalValue: 0, m_PreviousValue: 0, m_HasPreviousValue: 0, m_IsDisposed: 0}
+  meterContainer: {fileID: 0}
+  meterBackground: {fileID: 0}
+  meterFill: {fileID: 0}
+  fillMaterial: {fileID: 0}
 --- !u!1 &1372298028
 GameObject:
   m_ObjectHideFlags: 0
@@ -3844,48 +4028,13 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2132818516}
-  - component: {fileID: 2132818515}
   m_Layer: 0
   m_Name: ClientFrustumTempHolder
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &2132818515
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2132818514}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a5e0d0f900b87c8469cd73bb6eca2855, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  frustum1:
-    nearHalfWidth: 0.27
-    nearHalfHeight: 1.5
-    farHalfWidth: 2.8
-    farHalfHeight: 1.5
-    depth: 3.1
-    lineWidth: 0.005
-    lineMaterial: {fileID: 0}
-  frustum2:
-    nearHalfWidth: 0.27
-    nearHalfHeight: 1.5
-    farHalfWidth: 0.99
-    farHalfHeight: 1.5
-    depth: 3.1
-    lineWidth: 0.005
-    lineMaterial: {fileID: 0}
-  parentToDynamicTarget: 1
-  targetObjectName: RemoteHeadRepresentation(Clone)
-  searchInterval: 0.5
-  visibleInEditor: 0
-  enableCollisionDetection: 1
-  targetTag: MainCamera
+  m_IsActive: 0
 --- !u!4 &2132818516
 Transform:
   m_ObjectHideFlags: 0
@@ -4143,3 +4292,4 @@ SceneRoots:
   - {fileID: 1637086343}
   - {fileID: 89313557}
   - {fileID: 926587670}
+  - {fileID: 10090914}
