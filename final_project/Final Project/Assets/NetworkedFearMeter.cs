@@ -6,7 +6,7 @@ public class NetworkedFearMeter : NetworkBehaviour
     [SerializeField] private float maxFear = 100f;
     [SerializeField] private float fearPerDetection = 10f;
     
-    [SerializeField] private Vector3 meterPosition = new Vector3(0, 2, 5);
+    [SerializeField] private Vector3 meterPosition = new Vector3(-1.54f, 1.1f, 3.31f);
     [SerializeField] private float meterHeight = 2f;
     [SerializeField] private float meterRadius = 0.3f;
     [SerializeField] private Color emptyColor = new Color(0.2f, 0.2f, 0.2f);
@@ -69,7 +69,7 @@ public class NetworkedFearMeter : NetworkBehaviour
         fillCylinder.name = "Fill";
         fillCylinder.transform.SetParent(meterContainer.transform);
         fillCylinder.transform.localPosition = new Vector3(0, -meterHeight / 2, 0);
-        fillBaseScale = new Vector3(meterRadius * 1.8f + 0.2, 0, meterRadius * 1.8f + 0.2);
+        fillBaseScale = new Vector3(meterRadius * 1.8f + 0.2f, 0, meterRadius * 1.8f + 0.2f);
         fillCylinder.transform.localScale = fillBaseScale;
         
         Renderer fillRenderer = fillCylinder.GetComponent<Renderer>();
@@ -250,25 +250,5 @@ public class NetworkedFearMeter : NetworkBehaviour
         {
             Destroy(meterContainer);
         }
-    }
-
-    [ContextMenu("Add 10 Fear (Test)")]
-    public void TestAddFear()
-    {
-        if (IsServer)
-        {
-            AddFear(10f);
-            Debug.Log("[FearMeter] TEST: Added 10 fear manually");
-        }
-        else
-        {
-            Debug.LogWarning("[FearMeter] TEST: Can only add fear on server!");
-        }
-    }
-
-    [ContextMenu("Reset Fear (Test)")]
-    public void TestResetFear()
-    {
-        ResetFear();
     }
 }
