@@ -1181,6 +1181,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 386105851}
+  - component: {fileID: 386105852}
   m_Layer: 0
   m_Name: RightHandAnchor
   m_TagString: Untagged
@@ -1205,6 +1206,42 @@ Transform:
   - {fileID: 2145418566}
   m_Father: {fileID: 931464973}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &386105852
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 386105850}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: edc5f0372c0ec924fa0f2cf61a9b1239, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  controller: {fileID: 386105851}
+  beamLength: 1
+  beamScale: {x: 1, y: 1, z: 4}
+  beamMaterial: {fileID: 2100000, guid: 0ac5d85febf24fc4f8b85291ddec575c, type: 2}
+  triggerAction:
+    m_UseReference: 0
+    m_Action:
+      m_Name: Trigger
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: f45881e7-4f00-4034-a650-5249e4d7e508
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings:
+      - m_Name: 
+        m_Id: 1d59b984-f40a-4635-aa0f-4b4a2ee55446
+        m_Path: <XRController>{RightHand}/{Trigger}
+        m_Interactions: 
+        m_Processors: 
+        m_Groups: 
+        m_Action: Trigger
+        m_Flags: 0
+      m_Flags: 0
+    m_Reference: {fileID: 0}
 --- !u!1 &450238674
 GameObject:
   m_ObjectHideFlags: 0
@@ -4396,7 +4433,7 @@ Transform:
   m_GameObject: {fileID: 1851482009}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.371, z: -1.445}
+  m_LocalPosition: {x: -1.099, y: -0.738, z: -1.97}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -4410,7 +4447,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1851482009}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 34f939d35d6d22a42bbb2936a08b83a5, type: 3}
   m_Name: 
@@ -4736,6 +4773,7 @@ GameObject:
   - component: {fileID: 2019157806}
   - component: {fileID: 2019157808}
   - component: {fileID: 2019157809}
+  - component: {fileID: 2019157810}
   m_Layer: 0
   m_Name: Quad
   m_TagString: Untagged
@@ -4752,7 +4790,7 @@ Transform:
   m_GameObject: {fileID: 2019157801}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.5, z: 2}
+  m_LocalPosition: {x: -0.149, y: 1.582, z: 2}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4945,6 +4983,21 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 6.1232336e-17}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &2019157810
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2019157801}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 34f939d35d6d22a42bbb2936a08b83a5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rightController: {fileID: 386105851}
+  window: {fileID: 2019157802}
+  maxDistance: 5
 --- !u!1 &2046770822
 GameObject:
   m_ObjectHideFlags: 0
