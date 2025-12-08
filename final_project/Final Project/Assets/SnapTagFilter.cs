@@ -30,10 +30,7 @@ public class SnapTagFilter : MonoBehaviour, IGameObjectFilter
         if (!hasTag)
         {
             Debug.Log($"Object {go.name} cannot snap here - requires tag '{requiredTag}' but has '{go.tag}'");
-        } else
-        {
-            Debug.Log($"HALLO");
-        }
+        } 
         
         return hasTag;
     }

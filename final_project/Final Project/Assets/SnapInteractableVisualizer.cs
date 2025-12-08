@@ -25,7 +25,6 @@ public class SnapInteractableHoverVisualizer : MonoBehaviour
 
     private void Awake()
     {
-        // Auto-find SnapInteractable if not assigned
         if (snapInteractable == null)
         {
             snapInteractable = GetComponent<SnapInteractable>();
