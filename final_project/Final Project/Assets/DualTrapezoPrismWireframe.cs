@@ -49,7 +49,9 @@ public class DualTrapezoPrismWireframe : MonoBehaviour
 
     [Header("collision detect")]
     public bool enableCollisionDetection = true;
-    public string targetTag = "Target";
+
+    [Tooltip("Objects with ANY of these tags will be tracked")]
+    public string[] targetTags = new string[] { "Target" };
 
     private FrustumInstance instance1;
     private FrustumInstance instance2;
@@ -285,11 +287,24 @@ public class DualTrapezoPrismWireframe : MonoBehaviour
         instance.frustumCollider.size = new Vector3(instance.config.farHalfWidth * 2f, instance.config.farHalfHeight * 2f, instance.config.depth);
 
         FrustumTriggerHandler handler = instance.colliderObject.AddComponent<FrustumTriggerHandler>();
-        handler.Initialize(this, targetTag, instance.name);
+        handler.Initialize(this, targetTags, instance.name);
 
 #if UNITY_EDITOR
         instance.colliderObject.hideFlags = HideFlags.DontSaveInEditor;
 #endif
+    }
+
+    public bool HasAnyTargetTag(GameObject obj)
+    {
+        if (targetTags == null || targetTags.Length == 0)
+            return true;
+
+        foreach (string tag in targetTags)
+        {
+            if (obj.CompareTag(tag))
+                return true;
+        }
+        return false;
     }
 
     public void OnObjectEnteredFrustum(GameObject obj, string frustumName)
@@ -299,7 +314,7 @@ public class DualTrapezoPrismWireframe : MonoBehaviour
             if (!objectsInFrustum1.Contains(obj))
             {
                 objectsInFrustum1.Add(obj);
-                Debug.Log($"[{frustumName}] Object entered: {obj.name}");
+                Debug.Log($"[{frustumName}] Object entered: {obj.name} (Tag: {obj.tag})");
             }
         }
         else if (frustumName == "Frustum2")
@@ -307,7 +322,7 @@ public class DualTrapezoPrismWireframe : MonoBehaviour
             if (!objectsInFrustum2.Contains(obj))
             {
                 objectsInFrustum2.Add(obj);
-                Debug.Log($"[{frustumName}] Object entered: {obj.name}");
+                Debug.Log($"[{frustumName}] Object entered: {obj.name} (Tag: {obj.tag})");
             }
         }
 
@@ -324,7 +339,7 @@ public class DualTrapezoPrismWireframe : MonoBehaviour
             if (objectsInFrustum1.Contains(obj))
             {
                 objectsInFrustum1.Remove(obj);
-                Debug.Log($"[{frustumName}] Object exited: {obj.name}");
+                Debug.Log($"[{frustumName}] Object exited: {obj.name} (Tag: {obj.tag})");
             }
         }
         else if (frustumName == "Frustum2")
@@ -332,7 +347,7 @@ public class DualTrapezoPrismWireframe : MonoBehaviour
             if (objectsInFrustum2.Contains(obj))
             {
                 objectsInFrustum2.Remove(obj);
-                Debug.Log($"[{frustumName}] Object exited: {obj.name}");
+                Debug.Log($"[{frustumName}] Object exited: {obj.name} (Tag: {obj.tag})");
             }
         }
 
@@ -553,19 +568,32 @@ public class DualTrapezoPrismWireframe : MonoBehaviour
 public class FrustumTriggerHandler : MonoBehaviour
 {
     private DualTrapezoPrismWireframe parent;
-    private string targetTag;
+    private string[] targetTags;
     private string frustumName;
 
-    public void Initialize(DualTrapezoPrismWireframe parentScript, string tag, string frustum)
+    public void Initialize(DualTrapezoPrismWireframe parentScript, string[] tags, string frustum)
     {
         parent = parentScript;
-        targetTag = tag;
+        targetTags = tags;
         frustumName = frustum;
+    }
+
+    private bool HasAnyTargetTag(GameObject obj)
+    {
+        if (targetTags == null || targetTags.Length == 0)
+            return true;
+
+        foreach (string tag in targetTags)
+        {
+            if (obj.CompareTag(tag))
+                return true;
+        }
+        return false;
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (parent != null && other.CompareTag(targetTag))
+        if (parent != null && HasAnyTargetTag(other.gameObject))
         {
             parent.OnObjectEnteredFrustum(other.gameObject, frustumName);
         }
@@ -573,7 +601,7 @@ public class FrustumTriggerHandler : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        if (parent != null && other.CompareTag(targetTag))
+        if (parent != null && HasAnyTargetTag(other.gameObject))
         {
             parent.OnObjectExitedFrustum(other.gameObject, frustumName);
         }

@@ -9,6 +9,9 @@ TagManager:
   - CubeB
   - CubeC
   - PhysicalPlayer
+  - RequiredObjectA
+  - RequiredObjectB
+  - RequiredObjectC
   layers:
   - Default
   - TransparentFX
