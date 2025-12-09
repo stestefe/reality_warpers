@@ -8,6 +8,7 @@ TagManager:
   - CubeA
   - CubeB
   - CubeC
+  - PhysicalPlayer
   layers:
   - Default
   - TransparentFX
