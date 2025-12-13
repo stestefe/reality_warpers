@@ -19,6 +19,7 @@ GameObject:
   - component: {fileID: 8547900562415186414}
   - component: {fileID: 8614348958344435203}
   - component: {fileID: 6252410789256338507}
+  - component: {fileID: 7910199090490272891}
   m_Layer: 0
   m_Name: Cube 1
   m_TagString: PhysicalPlayer
@@ -312,6 +313,22 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!114 &7910199090490272891
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3793560951180389974}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4cc8d641b38b844faaad3c1d45307bc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
+  grabbable: {fileID: 7870349364438847499}
+  rb: {fileID: 6938437771423915148}
+  handGrabInteractable: {fileID: 2249478304818647676}
 --- !u!1 &9031870594225745506
 GameObject:
   m_ObjectHideFlags: 0
