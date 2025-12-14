@@ -16,7 +16,6 @@ GameObject:
   - component: {fileID: 7870349364438847499}
   - component: {fileID: 9196975735777218480}
   - component: {fileID: 2249478304818647676}
-  - component: {fileID: 8547900562415186414}
   - component: {fileID: 8614348958344435203}
   - component: {fileID: 6252410789256338507}
   - component: {fileID: 1346174056523575322}
@@ -111,7 +110,7 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -139,8 +138,8 @@ Rigidbody:
     m_Bits: 0
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
-  m_UseGravity: 0
-  m_IsKinematic: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
@@ -230,18 +229,6 @@ MonoBehaviour:
   _movementProvider: {fileID: 0}
   _handAligment: 1
   _handGrabPoses: []
---- !u!114 &8547900562415186414
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3793560951180389974}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0ca60a027391b284da989100ae3ea262, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &8614348958344435203
 MonoBehaviour:
   m_ObjectHideFlags: 0
