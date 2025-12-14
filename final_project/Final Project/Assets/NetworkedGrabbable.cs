@@ -3,10 +3,6 @@ using UnityEngine;
 using Oculus.Interaction;
 using Oculus.Interaction.HandGrab;
 
-/// <summary>
-/// Makes a grabbable object work across the network
-/// Attach this to your grabbable object alongside NetworkObject and NetworkTransform
-/// </summary>
 public class NetworkedGrabbable : NetworkBehaviour
 {
     [SerializeField] private Grabbable grabbable;
@@ -30,7 +26,6 @@ public class NetworkedGrabbable : NetworkBehaviour
 
     private void Start()
     {
-        // Subscribe to grab events
         if (grabbable != null)
         {
             grabbable.WhenPointerEventRaised += HandlePointerEvent;
@@ -45,7 +40,6 @@ public class NetworkedGrabbable : NetworkBehaviour
 
     private void OnDestroy()
     {
-        // Unsubscribe from events
         if (grabbable != null)
         {
             grabbable.WhenPointerEventRaised -= HandlePointerEvent;
