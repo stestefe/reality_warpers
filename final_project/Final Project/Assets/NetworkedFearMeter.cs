@@ -1,5 +1,7 @@
 using Unity.Netcode;
 using UnityEngine;
+using Oculus.Interaction;
+using Oculus.Interaction.HandGrab;
 
 public class NetworkedFearMeter : NetworkBehaviour
 {
@@ -16,6 +18,8 @@ public class NetworkedFearMeter : NetworkBehaviour
     
     [SerializeField] private bool enableDebugLogs = true;
     [SerializeField] private float movementThreshold = 0.01f;
+    
+    [SerializeField] private bool ignoreGrabbedObjects = true;
     
     private NetworkVariable<float> currentFear = new NetworkVariable<float>(
         0f, 
@@ -110,11 +114,36 @@ public class NetworkedFearMeter : NetworkBehaviour
         CheckFrustumObjects(objectsInFrustum2, "Frustum2");
     }
 
+    private bool IsObjectGrabbed(GameObject obj)
+    {
+        if (!ignoreGrabbedObjects) return false;
+        
+        var grabInteractable = obj.GetComponentInParent<GrabInteractable>();
+        if (grabInteractable != null && grabInteractable.State == InteractableState.Select)
+        {
+            return true;
+        }
+        
+        
+        return false;
+    }
+
     private void CheckFrustumObjects(System.Collections.Generic.List<GameObject> objectsInFrustum, string frustumName)
     {
         foreach (var obj in objectsInFrustum)
         {
             if (obj == null) continue;
+            
+            if (IsObjectGrabbed(obj))
+            {
+                if (enableDebugLogs && objectLastPositions.ContainsKey(obj))
+                {
+                    Debug.Log($"[FearMeter] [{frustumName}] Object '{obj.name}' is grabbed - ignoring movement");
+                }
+                
+                objectLastPositions[obj] = obj.transform.position;
+                continue;
+            }
             
             if (objectLastPositions.ContainsKey(obj))
             {
@@ -131,7 +160,7 @@ public class NetworkedFearMeter : NetworkBehaviour
                     
                     if (enableDebugLogs)
                     {
-                        Debug.Log($"[FearMeter] [{frustumName}] Object '{obj.name}' moved {distance:F3}m. Adding {fearAdded:F2} fear. Total fear: {currentFear.Value:F2}/{maxFear}");
+                        Debug.Log($"[FearMeter] [{frustumName}] Object '{obj.name}' moved {distance:F3}m (not grabbed). Adding {fearAdded:F2} fear. Total fear: {currentFear.Value:F2}/{maxFear}");
                     }
                 }
             }
