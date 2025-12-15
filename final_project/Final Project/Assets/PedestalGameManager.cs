@@ -16,6 +16,7 @@ public class PedestalGameManager : MonoBehaviour
             zone3.hasCorrectObject)
         {
             gameCompleted = true;
+            GameManager.Instance.SetHostWinCondition1(true);
             Debug.Log("Game Completed!");
         }
     }

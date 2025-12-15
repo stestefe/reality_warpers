@@ -85,10 +85,9 @@ public class ClientBeamResponder : MonoBehaviour
         if (hostBeam != null)
         {
             hostBeam.isColliding.OnValueChanged -= OnHostBeamCollisionChanged;
-            hostBeam.buttonTriggered.OnValueChanged -= OnButtonTriggeredChanged; // New
+            hostBeam.buttonTriggered.OnValueChanged -= OnButtonTriggeredChanged;
         }
         
-        // Clean up any running coroutines
         if (timedActivationCoroutine != null)
         {
             StopCoroutine(timedActivationCoroutine);

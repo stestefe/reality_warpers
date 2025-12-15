@@ -208,12 +208,24 @@ public class NetworkedFearMeter : NetworkBehaviour
         
         float oldFear = currentFear.Value;
         currentFear.Value = Mathf.Clamp(currentFear.Value + amount, 0f, maxFear);
+
+        if (!wasFull && currentFear.Value >= maxFear)
+        {
+            OnFearFull();
+        }
         
         if (enableDebugLogs && Mathf.Abs(currentFear.Value - oldFear) > 0.001f)
         {
             Debug.Log($"[FearMeter] Fear increased: {oldFear:F2} -> {currentFear.Value:F2} (+{amount:F2})");
         }
     }
+
+    private void OnFearFull()
+    {
+        GameManager.Instance.SetClientWinCondition(true);
+        Debug.Log("[FearMeter] Fear meter is FULL!");
+    }
+
 
     public void ResetFear()
     {
