@@ -8,14 +8,15 @@ public class ControllerBeam : NetworkBehaviour
     public Vector3 beamScale = new Vector3(0.05f, 0.05f, 1f);
     public Material beamMaterial;
     public InputActionProperty triggerAction;
-    public string targetTag = "Interactable"; // Tag to detect
+    public string targetTag = "Player";
+    public GameObject passThroughPlane;
 
-    public GameObject clientObjectToEnable;
+    // public GameObject clientObjectToEnable;
 
     private GameObject beamCube;
     private BoxCollider beamCollider;
 
-    private NetworkVariable<bool> isColliding = new NetworkVariable<bool>(
+    public NetworkVariable<bool> isColliding = new NetworkVariable<bool>(
         false, 
         NetworkVariableReadPermission.Everyone, 
         NetworkVariableWritePermission.Owner
@@ -79,6 +80,7 @@ public class ControllerBeam : NetworkBehaviour
         if (IsOwner)
         {
             isColliding.Value = true;
+            passThroughPlane.SetActive(true);
             Debug.Log($"Beam colliding with: {other.gameObject.name}");
         }
     }
@@ -88,6 +90,7 @@ public class ControllerBeam : NetworkBehaviour
         if (IsOwner)
         {
             isColliding.Value = false;
+            passThroughPlane.SetActive(false);
             Debug.Log($"Beam stopped colliding with: {other.gameObject.name}");
         }
     }
@@ -96,10 +99,10 @@ public class ControllerBeam : NetworkBehaviour
     {
         Debug.Log($"Collision state changed: {newValue}");
         
-        if (clientObjectToEnable != null)
-        {
-            clientObjectToEnable.SetActive(newValue);
-        }
+        // if (clientObjectToEnable != null)
+        // {
+        //     clientObjectToEnable.SetActive(newValue);
+        // }
 
     }
 
