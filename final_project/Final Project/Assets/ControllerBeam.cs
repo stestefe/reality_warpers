@@ -8,7 +8,7 @@ public class ControllerBeam : NetworkBehaviour
     public Vector3 beamScale = new Vector3(0.05f, 0.05f, 1f);
     public Material beamMaterial;
     public InputActionProperty triggerAction;
-    public InputActionProperty buttonAction; // New: Button input
+    public InputActionProperty buttonAction;
     public string targetTag = "Player";
     public GameObject passThroughPlane;
 
@@ -56,7 +56,7 @@ public class ControllerBeam : NetworkBehaviour
         base.OnNetworkSpawn();
         
         isColliding.OnValueChanged += OnCollidingChanged;
-        buttonTriggered.OnValueChanged += OnButtonTriggeredChanged; // New
+        buttonTriggered.OnValueChanged += OnButtonTriggeredChanged;
         
         OnCollidingChanged(false, isColliding.Value);
     }
@@ -65,7 +65,7 @@ public class ControllerBeam : NetworkBehaviour
     {
         base.OnNetworkDespawn();
         isColliding.OnValueChanged -= OnCollidingChanged;
-        buttonTriggered.OnValueChanged -= OnButtonTriggeredChanged; // New
+        buttonTriggered.OnValueChanged -= OnButtonTriggeredChanged;
     }
 
     void Update()
@@ -86,6 +86,12 @@ public class ControllerBeam : NetworkBehaviour
         {
             buttonTriggered.Value = true;
             Debug.Log("Button pressed while colliding!");
+        }
+        
+        if (buttonAction.action.WasReleasedThisFrame())
+        {
+            buttonTriggered.Value = false;
+            Debug.Log("Button released!");
         }
     }
 

@@ -118,10 +118,16 @@ public class NetworkedFearMeter : NetworkBehaviour
 
     private bool IsObjectGrabbed(GameObject obj)
     {
-        if (!ignoreGrabbedObjects) return false;
-        
+         if (!ignoreGrabbedObjects) return false;
+    
         var grabInteractable = obj.GetComponentInParent<GrabInteractable>();
         if (grabInteractable != null && grabInteractable.State == InteractableState.Select)
+        {
+            return true;
+        }
+        
+        var handGrabInteractable = obj.GetComponentInParent<HandGrabInteractable>();
+        if (handGrabInteractable != null && handGrabInteractable.State == InteractableState.Select)
         {
             return true;
         }
