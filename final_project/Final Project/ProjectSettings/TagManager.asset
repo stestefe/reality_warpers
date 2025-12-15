@@ -13,6 +13,7 @@ TagManager:
   - RequiredObjectB
   - RequiredObjectC
   - Ghost
+  - Ball
   layers:
   - Default
   - TransparentFX

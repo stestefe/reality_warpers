@@ -5,7 +5,7 @@ public class AttachController : MonoBehaviour
     public Transform rightController;
     public Transform window;
 
-    public float maxDistance = 5f;
+    public float maxDistance = 0.2f;
 
     void Update()
     {
@@ -20,7 +20,7 @@ public class AttachController : MonoBehaviour
         // else
         // {
             window.position = ray.origin + ray.direction * maxDistance;
-            window.rotation = Quaternion.LookRotation(ray.direction);
+            window.rotation = Quaternion.LookRotation(ray.direction, Vector3.up);
         // }
     }
 }

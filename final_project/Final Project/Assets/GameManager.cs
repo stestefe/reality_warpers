@@ -1,5 +1,6 @@
 using Unity.Netcode;
 using UnityEngine;
+using System.Collections;
 
 public class GameManager : NetworkBehaviour
 {
@@ -15,6 +16,9 @@ public class GameManager : NetworkBehaviour
 
     public delegate void GameEndedDelegate(int winner);
     public static event GameEndedDelegate OnGameEnded;
+
+    public GameObject virtualFireworks;
+    public GameObject physicalFireworks;
 
     private void Awake()
     {
@@ -54,6 +58,7 @@ public class GameManager : NetworkBehaviour
         if (!IsServer) return;
         
         hostWinCondition2 = value;
+        Debug.Log("winconditions2");
         CheckWinConditions();
     }
 
@@ -71,14 +76,17 @@ public class GameManager : NetworkBehaviour
         
         if (gameEnded.Value) return;
 
-        if (hostWinCondition1 && hostWinCondition2)
+        // if (hostWinCondition1 && hostWinCondition2)
+        if (hostWinCondition1)
         {
+            StartCoroutine(SpawnFireworksForever(virtualFireworks));
             EndGame(0);
             return;
         }
 
         if (clientWinCondition)
         {
+            StartCoroutine(SpawnFireworksForever(physicalFireworks));
             EndGame(1);
             return;
         }
@@ -129,5 +137,24 @@ public class GameManager : NetworkBehaviour
         hostWinCondition1 = false;
         hostWinCondition2 = false;
         clientWinCondition = false;
+    }
+
+    private IEnumerator SpawnFireworksForever(GameObject fireworks)
+    {
+        while (true)
+        {
+            for (int i = 0; i < 30; i++)
+            {
+                float x = UnityEngine.Random.Range(-7f, 7f);
+                float y = UnityEngine.Random.Range(0f, 5f);
+                float z = UnityEngine.Random.Range(-7f, 7f);
+                Vector3 spawnPos = new Vector3(x, y, z);
+
+                GameObject effect = Instantiate(fireworks, spawnPos, Quaternion.identity);
+                Destroy(effect, 1f);
+            }
+
+            yield return new WaitForSeconds(2f);
+        }
     }
 }

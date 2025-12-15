@@ -161,7 +161,7 @@ public class NetworkedFearMeter : NetworkBehaviour
                 
                 if (distance > movementThreshold)
                 {
-                    float fearAdded = fearPerDetection * Time.deltaTime;
+                    float fearAdded = fearPerDetection * Time.deltaTime * 0.7f;
                     AddFear(fearAdded);
                     objectLastPositions[obj] = currentPos;
                     

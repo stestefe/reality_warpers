@@ -11,9 +11,14 @@ public class ControllerBeam : NetworkBehaviour
     public InputActionProperty buttonAction;
     public string targetTag = "Player";
     public GameObject passThroughPlane;
+    
+    [Header("Cooldown Settings")]
+    public float cooldownDuration = 10f;
 
     private GameObject beamCube;
     private BoxCollider beamCollider;
+    private float cooldownTimer = 0f;
+    private bool isOnCooldown = false;
 
     public NetworkVariable<bool> isColliding = new NetworkVariable<bool>(
         false, 
@@ -72,7 +77,28 @@ public class ControllerBeam : NetworkBehaviour
     {
         if (!IsOwner) return;
 
+        if (isOnCooldown)
+        {
+            cooldownTimer -= Time.deltaTime;
+            if (cooldownTimer <= 0f)
+            {
+                isOnCooldown = false;
+                cooldownTimer = 0f;
+                Debug.Log("Cooldown finished! Beam collision enabled.");
+            }
+        }
+
         bool triggerPressed = triggerAction.action.ReadValue<float>() > 0.1f;
+        
+        if (!triggerPressed && beamCube.activeSelf)
+        {
+            if (!isOnCooldown)
+            {
+                isColliding.Value = false;
+            }
+            passThroughPlane.SetActive(false);
+        }
+        
         beamCube.SetActive(triggerPressed);
 
         if (triggerPressed)
@@ -82,10 +108,18 @@ public class ControllerBeam : NetworkBehaviour
             beamCube.transform.localPosition = new Vector3(0, 0, beamScale.z / 2f);
         }
 
-        if (buttonAction.action.WasPressedThisFrame() && isColliding.Value)
+        if (buttonAction.action.WasPressedThisFrame() && isColliding.Value && !isOnCooldown)
         {
             buttonTriggered.Value = true;
-            Debug.Log("Button pressed while colliding!");
+            
+            isOnCooldown = true;
+            cooldownTimer = cooldownDuration;
+            
+            beamCollider.enabled = false;
+            isColliding.Value = false;
+            passThroughPlane.SetActive(false);
+            
+            Debug.Log($"Button pressed! Starting {cooldownDuration}s cooldown. Beam collision disabled.");
         }
         
         if (buttonAction.action.WasReleasedThisFrame())
@@ -93,11 +127,16 @@ public class ControllerBeam : NetworkBehaviour
             buttonTriggered.Value = false;
             Debug.Log("Button released!");
         }
+
+        if (!isOnCooldown && !beamCollider.enabled)
+        {
+            beamCollider.enabled = true;
+        }
     }
 
     public void OnBeamTriggerEnter(Collider other)
     {
-        if (IsOwner)
+        if (IsOwner && !isOnCooldown)
         {
             isColliding.Value = true;
             passThroughPlane.SetActive(true);
@@ -107,7 +146,7 @@ public class ControllerBeam : NetworkBehaviour
 
     public void OnBeamTriggerExit(Collider other)
     {
-        if (IsOwner)
+        if (IsOwner && !isOnCooldown)
         {
             isColliding.Value = false;
             passThroughPlane.SetActive(false);
@@ -126,6 +165,14 @@ public class ControllerBeam : NetworkBehaviour
     }
 
     public bool IsColliding => isColliding.Value;
+    
+    public float GetCooldownProgress()
+    {
+        if (!isOnCooldown) return 0f;
+        return cooldownTimer / cooldownDuration;
+    }
+    
+    public bool IsOnCooldown => isOnCooldown;
 }
 
 public class BeamCollisionDetector : MonoBehaviour
