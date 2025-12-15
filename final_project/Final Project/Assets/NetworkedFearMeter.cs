@@ -34,6 +34,8 @@ public class NetworkedFearMeter : NetworkBehaviour
     
     private System.Collections.Generic.Dictionary<GameObject, Vector3> objectLastPositions = 
         new System.Collections.Generic.Dictionary<GameObject, Vector3>();
+    
+    private bool wasFull = false;
 
     private void Start()
     {
@@ -123,7 +125,6 @@ public class NetworkedFearMeter : NetworkBehaviour
         {
             return true;
         }
-        
         
         return false;
     }
@@ -222,10 +223,10 @@ public class NetworkedFearMeter : NetworkBehaviour
 
     private void OnFearFull()
     {
+        wasFull = true;
         GameManager.Instance.SetClientWinCondition(true);
         Debug.Log("[FearMeter] Fear meter is FULL!");
     }
-
 
     public void ResetFear()
     {
@@ -237,6 +238,7 @@ public class NetworkedFearMeter : NetworkBehaviour
         }
         
         currentFear.Value = 0f;
+        wasFull = false;
     }
 
     private void OnFearValueChanged(float oldValue, float newValue)
